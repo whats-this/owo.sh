@@ -42,8 +42,10 @@ if [ ! -d "$owodir" ]; then
   cp -r ./* $HOME/.config/owo
 fi
 
-sudo ln -s $HOME/.config/owo/script.sh /usr/local/bin/owo
-
+if [ ! -f /usr/local/bin/owo]; then
+	sudo ln -s $HOME/.config/owo/script.sh /usr/local/bin/owo
+else
+	echo "owo.sh already installed!"
 function is_mac() {
         uname | grep -q "Darwin"
 }
@@ -53,9 +55,15 @@ function is_mac() {
 if is_mac; then
 	continue
 else
-	(which notify-send &>/dev/null && echo "FOUND : found screencapture") || apt-get install notify-send
-	(which maim &>/dev/null && echo "FOUND : found maim") || apt-get install notify-send
-	(which xclip &>/dev/null && echo "FOUND : found xclip") || apt-get install xclip
+	if [ ls /etc/*release | grep -i "lsb"]; then
+		(which notify-send &>/dev/null && echo "FOUND : found screencapture") || apt-get install notify-send
+		(which maim &>/dev/null && echo "FOUND : found maim") || apt-get install notify-send
+		(which xclip &>/dev/null && echo "FOUND : found xclip") || apt-get install xclip
+	else
+		(which notify-send &>/dev/null && echo "FOUND : found screencapture")
+		(which maim &>/dev/null && echo "FOUND : found maim")
+		(which xclip &>/dev/null && echo "FOUND : found xclip")
+	fi
 fi
 
 # Tell the user its done!
