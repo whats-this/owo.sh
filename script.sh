@@ -18,7 +18,7 @@
 # Also a big thankyou to jomo/imgur-screenshot to which i've edited parts
 # of his script into my own, which included compatability with now, Linux!
 
-current_version="v0.0.1"
+current_version="v0.0.5"
 
 ##################################
 
