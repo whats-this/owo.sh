@@ -8,20 +8,18 @@ Thank you to [jomo](https://github.com/jomo/) and his script [jomo/imgur-screens
 
 ## dependencies
 
-| os         	 | dependency                   |
-| -------------- | ---------------------------- |
-| MacOS     	 | Terminal Notifier            |
-|      	     	 | Screencapture                |
-|      	      	 | Pbcopy                       |
-|      	     	 | GREP                         |
-|      	     	 | cURL                         |
-| Linux     	 | Notify-Send                  |
-|       	     | Maim                         |
-|     	     	 | XClip                        |
-|      	     	 | GREP                         |
-|     	      	 | cURL                         |
-
---------
+| os         	 | dependency                   | description
+|--------------- |----------------------------- |-----------------------------------------------------------------------------------------------------
+| MacOS     	 | Terminal Notifier            | Default OSX Notifications suck and barely work, this is a workaround for that.
+|      	     	 | Screencapture                | Comes default with OSX and is the client that you use when you press CMD + Shift 3 or CMD + Shift 4.
+|      	      	 | Pbcopy                       | Comes default with OSX and is used to copy things to your clipboard.
+|      	     	 | GREP                         | Comes standard with all UNIX os's and is used to (in this case) decipher JSON.
+|      	     	 | cURL                         | Comes standard with all UNIX os's and is used to (in this case) upload to the owo server.
+| Linux     	 | Notify-Send                  | Default Linux barely has any, if at all, notification support from terminal. This is a workaround.
+|       	     | Maim                         | A rich screenshotting client, that better than what comes default with Linux.
+|     	     	 | XClip                        | Comes default with most Unix based os's and allows for things to copied to clipboards.
+|      	     	 | GREP                         | Comes standard with all UNIX os's and is used to (in this case) decipher JSON.
+|     	      	 | cURL                         | Comes standard with all UNIX os's and is used to (in this case) upload to the owo server.
 
 ##instructions
 
