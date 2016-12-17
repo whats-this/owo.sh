@@ -1,4 +1,4 @@
-#!/bin/bash
+\#!/bin/bash
 #                                   _                 _
 #                                  | |               | |
 #   _____      _____    _   _ _ __ | | ___   __ _  __| | ___ _ __
@@ -70,6 +70,7 @@ fi
 
 if [ "${1}" = "--version" ]; then
 	echo "INFO  : You are on version $current_version"
+	exit
 fi
 
 ##################################
