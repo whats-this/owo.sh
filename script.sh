@@ -113,7 +113,7 @@ fi
 ##################################
 if [ "${1}" = "--shorten" ]; then
 
-  check_key
+	check_key
 
 	#Tell our user the shortening has begun.
 	if is_mac; then
@@ -122,31 +122,33 @@ if [ "${1}" = "--shorten" ]; then
 		notify-send owoshorten "Please enter the URL you wish to shorten."
 	fi
 	echo "Please enter the URL you wish to shorten."
-  read url
+	read url
 
 	#Check if the URL entered is valid.
-  regex='(https?|ftp|file)://[-A-Za-z0-9\+&@#/%?=~_|!:,.;]*[-A-Za-z0-9\+&@#/%=~_|]'
-  if [[ $url =~ $regex ]]; then
-    result=$(curl "https://api.whats-th.is/shorten/polr?action=shorten&key=$key&url=$url")
-    echo $result
+	regex='(https?|ftp|file)://[-A-Za-z0-9\+&@#/%?=~_|!:,.;]*[-A-Za-z0-9\+&@#/%=~_|]'
+	if [[ $url =~ $regex ]]; then
+		result=$(curl "https://api.whats-th.is/shorten/polr?action=shorten&key=$key&url=$url")
+		echo $result
 
 		#Check if the URL got sucessfully shortened.
-    if grep -q "https://" <<< "${result}"; then
+		if grep -q "https://" <<< "${result}"; then
 			if is_mac; then
 				echo $result | pbcopy
 				terminal-notifier -title owo.whats-th.is -message "Copied the link to the keyboard."
 			else
-      	echo $result | xclip -i -sel c -f |xclip -i -sel p
-      	notify-send owo.whats-th.is "Copied the link to the keyboard."
-      	exit
+				echo $result | xclip -i -sel c -f |xclip -i -sel p
+				notify-send owo.whats-th.is "Copied the link to the keyboard."
+				exit
 			fi
 		else
-      notify-send owoshorten "Shortening failed!"
-    fi
-  else
-    notify-send owoshorten "Link is not valid!"
-    echo "Link is not valid!"
-  fi
+			notify-send owoshorten "Shortening failed!"
+		fi
+	else
+		notify-send owoshorten "Link is not valid!"
+		echo "Link is not valid!"
+	fi
+
+	exit 0
 fi
 ##################################
 
