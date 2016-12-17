@@ -1,28 +1,28 @@
 #!/bin/bash
-#                                   _                 _           
-#                                  | |               | |          
-#   _____      _____    _   _ _ __ | | ___   __ _  __| | ___ _ __ 
+#                                   _                 _
+#                                  | |               | |
+#   _____      _____    _   _ _ __ | | ___   __ _  __| | ___ _ __
 #  / _ \ \ /\ / / _ \  | | | | '_ \| |/ _ \ / _` |/ _` |/ _ \ '__|
-#  |(_) \ V  V / (_)|  | |_| | |_) | | (_) | (_| | (_| |  __/ |   
-#  \___/ \_/\_/ \___/   \__,_| .__/|_|\___/ \__,_|\__,_|\___|_|   
-#                            | |                                  
-#                            |_|                                  
+#  |(_) \ V  V / (_)|  | |_| | |_) | | (_) | (_| | (_| |  __/ |
+#  \___/ \_/\_/ \___/   \__,_| .__/|_|\___/ \__,_|\__,_|\___|_|
+#                            | |
+#                            |_|
 #
 # OWOUPLOADER.SH SCRIPT.
-# ----------------------  
-# 
+# ----------------------
+#
 # This script is a port of a previous written script meant for uploading to
 # catgirlsare.sexy, however it had to be modified (slightly) in order to be
 # fixed for owo.whats-th.is, please enjoy!
-# 
+#
 # Also a big thankyou to jomo/imgur-screenshot to which i've edited parts
 # of his script into my own, which included compatability with now, Linux!
 
-current_version="v0.0.4"
+current_version="v0.0.1"
 
 ##################################
 
-if [ ! -d "${HOME}/Documents/.owo/" ]; then 
+if [ ! -d "${HOME}/Documents/.owo/" ]; then
 	echo "Could not find file, downloading..."
 	mkdir -p ${HOME}/Documents/.owo/
 	curl -s -o ${HOME}/Documents/.owo/conf.cfg https://cdn.rawgit.com/whats-this/owo.sh/master/conf.cfg
@@ -54,6 +54,8 @@ function check_key() {
 ##################################
 
 if [ "${1}" = "--check" ]; then
+	echo ""
+
 	(which grep &>/dev/null && echo "FOUND: found grep") || echo "ERROR: grep not found"
 	if is_mac; then
 		if which terminal-notifier &>/dev/null; then
@@ -113,21 +115,32 @@ if [ "${1}" = "--shorten" ]; then
 
   check_key
 
-  notify-send owoshorten "Please enter the URL you wish to shorten."
-
-  echo "Please enter the URL you wish to shorten."
-
+	#Tell our user the shortening has begun.
+	if is_mac; then
+		terminal-notifier -title owo.whats-th.is -message "Please enter the URL you wish to shorten."
+	else
+		notify-send owoshorten "Please enter the URL you wish to shorten."
+	fi
+	echo "Please enter the URL you wish to shorten."
   read url
 
+	#Check if the URL entered is valid.
   regex='(https?|ftp|file)://[-A-Za-z0-9\+&@#/%?=~_|!:,.;]*[-A-Za-z0-9\+&@#/%=~_|]'
   if [[ $url =~ $regex ]]; then
     result=$(curl "https://api.whats-th.is/shorten/polr?action=shorten&key=$key&url=$url")
     echo $result
+
+		#Check if the URL got sucessfully shortened.
     if grep -q "https://" <<< "${result}"; then
-      echo $result | xclip -i -sel c -f |xclip -i -sel p
-      notify-send owoshorten "Copied the link to the keyboard."
-      exit
-    else
+			if is_mac; then
+				echo $result | pbcopy
+				terminal-notifier -title owo.whats-th.is -message "Copied the link to the keyboard."
+			else
+      	echo $result | xclip -i -sel c -f |xclip -i -sel p
+      	notify-send owo.whats-th.is "Copied the link to the keyboard."
+      	exit
+			fi
+		else
       notify-send owoshorten "Shortening failed!"
     fi
   else
@@ -135,7 +148,6 @@ if [ "${1}" = "--shorten" ]; then
     echo "Link is not valid!"
   fi
 fi
-
 ##################################
 
 if [ "${1}" = "--screenshot" ]; then
@@ -153,7 +165,7 @@ if [ "${1}" = "--screenshot" ]; then
 	if is_mac; then
 		screencapture -o -i $path$filename
 	else
-		scrot -s $path$filename
+		maim -s $path$filename
 	fi
 
 	# Make a directory for our user if it doesnt already exsist.
