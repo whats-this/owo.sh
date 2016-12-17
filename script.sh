@@ -53,30 +53,30 @@ function check_key() {
 
 ##################################
 
-if [ "${1}" = "--help" ]; then
+if [ "${1}" = "--h" ] || [ "${1}" = "--help" ]; then
 	echo "usage: ${0} [-h | --check | -v]"
 	echo ""
-	echo "      --help                   Show this help screen to you."
-	echo "      --version                Show current application version."
-	echo "      --check                  Checks if dependencies are installed."
+	echo "   -h --help                   Show this help screen to you."
+	echo "   -v --version                Show current application version."
+	echo "   -c --check                  Checks if dependencies are installed."
 	echo "      --update                 Checks if theres an update available."
-	echo "      --shorten                Begins the url shortening process."
-	echo "      --screenshot             Begins the screenshot uploading process."
+	echo "   -l --shorten                Begins the url shortening process."
+	echo "   -s --screenshot             Begins the screenshot uploading process."
 	echo ""
 	exit 0
 fi
 
 ##################################
 
-if [ "${1}" = "--version" ]; then
+if [ "${1}" = "--v" ] || [ "${1}" = "--version" ]; then
 	echo "INFO  : You are on version $current_version"
 	exit 0
 fi
 
 ##################################
 
-if [ "${1}" = "--check" ]; then
-	(which grep &>/dev/null && echo "FOUND: found grep") || echo "ERROR: grep not found"
+if [ "${1}" = "-c" ] || [ "${1}" = "--check" ]; then
+	(which grep &>/dev/null && echo "FOUND : found grep") || echo "ERROR : grep not found"
 	if is_mac; then
 		if which terminal-notifier &>/dev/null; then
 			echo "FOUND : found terminal-notifier"
@@ -118,7 +118,7 @@ if [ "${1}" = "--update" ]; then
 fi
 
 ##################################
-if [ "${1}" = "--shorten" ]; then
+if [ "${1}" = "-l" ] || [ "${1}" = "--shorten" ]; then
 
 	check_key
 
@@ -167,7 +167,7 @@ fi
 
 ##################################
 
-if [ "${1}" = "--screenshot" ]; then
+if [ "${1}" = "-s" ] || [ "${1}" = "--screenshot" ]; then
 
 	check_key
 

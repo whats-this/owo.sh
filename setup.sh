@@ -39,5 +39,14 @@ fi
 sudo ln -s $HOME/Documents/.owo/script.sh /usr/local/bin/owo
 
 
+# Install dependencies
+if is_mac:
+	# Mac is junk and has no prior way to install them.
+else
+	(which notify-send &>/dev/null && echo "FOUND : found screencapture") || apt-get install notify-send
+	(which maim &>/dev/null && echo "FOUND : found MAIM") || apt-get install notify-send
+	(which xclip &>/dev/null && echo "FOUND : found xclip") || apt-get install xclip
+fi
+
 # Tell the user its done!
 echo "INFO  : Installation finished. Use it like \"owo file.png\""

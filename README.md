@@ -6,6 +6,25 @@ Thank you to [jomo](https://github.com/jomo/) and his script [jomo/imgur-screens
 
 # Install
 
+## dependencies
+
+| os         	 | dependency                   |
+| -------------- | ---------------------------- |
+| MacOS     	 | Terminal Notifier            |
+|      	     	 | Screencapture                |
+|      	      	 | Pbcopy                       |
+|      	     	 | GREP                         |
+|      	     	 | cURL                         |
+| Linux     	 | Notify-Send                  |
+|       	     | Maim                         |
+|     	     	 | XClip                        |
+|      	     	 | GREP                         |
+|     	      	 | cURL                         |
+
+--------
+
+##instructions
+
 1. Clone the repo with `git clone https://github.com/whats-this/owo.sh.git`
 2. Make sure `script.sh` has permissions, `chmod a+x script.sh`.
 3. Download the dependencies, you can check what you need with `./script.sh --check`
@@ -23,14 +42,14 @@ owo image.png
 
 However the following flags can be placed after `owo` for the each of the results.
 
-| command      	| description                              	|
-|--------------	|------------------------------------------	|
-| --help       	| Show the help screen to you,             	|
-| --version    	| Show current application version.        	|
-| --check      	| Checks if dependencies are installed.    	|
-| --update     	| Checks if theres an update available.    	|
-| --shorten    	| Begins the url shortening process.       	|
-| --screenshot 	| Begins the screenshot uploading process. 	|
+| short | command      	| description                              	|
+| ----- |--------------	|------------------------------------------	|
+| -h    | --help       	| Show the help screen to you,             	|
+| -v    | --version    	| Show current application version.        	|
+| -c    | --check      	| Checks if dependencies are installed.    	|
+|       | --update     	| Checks if theres an update available.    	|
+| -l    | --shorten    	| Begins the url shortening process.       	|
+| -s    | --screenshot 	| Begins the screenshot uploading process. 	|
 
 # Contribute
 
