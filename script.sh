@@ -11,19 +11,19 @@
 # OWOUPLOADER.SH SCRIPT.
 # ----------------------
 #
-# This script is a port of a previous written script meant for uploading to
-# catgirlsare.sexy, however it had to be modified (slightly) in order to be
-# fixed for owo.whats-th.is, please enjoy!
+# This script allows for native support to upload to the image server
+# and url shortener component of whats-th.is. Through this you can do
+# plethora of actions.
 #
-# Also a big thankyou to jomo/imgur-screenshot to which i've edited parts
-# of his script into my own, which included compatability with now, Linux!
+# A big thankyou to jomo/imgur-screenshot to which i've edited parts
+# of his script into my own.
 
 current_version="v0.0.6"
 
 ##################################
 
 if [ ! -d "${HOME}/Documents/.owo/" ]; then
-	echo "Could not find file, downloading..."
+	echo "INFO  : Could not find file, downloading..."
 	mkdir -p ${HOME}/Documents/.owo/
 	curl -s -o ${HOME}/Documents/.owo/conf.cfg https://cdn.rawgit.com/whats-this/owo.sh/master/conf.cfg
 fi
@@ -43,7 +43,7 @@ function is_mac() {
 
 function check_key() {
 	if [ -z "$key" ]; then
-		echo "INF : \$key not found, please enter your key."
+		echo "INFO  : \$key not found, please enter your key."
 		read key
 		if [[ -z "$key" ]]; then
 			check_key
@@ -53,38 +53,43 @@ function check_key() {
 
 ##################################
 
-if [ "${1}" = "--check" ]; then
-	echo ""
-
-	(which grep &>/dev/null && echo "FOUND: found grep") || echo "ERROR: grep not found"
-	if is_mac; then
-		if which terminal-notifier &>/dev/null; then
-			echo "FOUND: found terminal-notifier"
-		else
-			echo "ERROR: terminal-notifier not found"
-		fi
-		(which screencapture &>/dev/null && echo "FOUND: found screencapture") || echo "ERROR: screencapture not found"
-		(which pbcopy &>/dev/null && echo "FOUND: found pbcopy") || echo "ERROR: pbcopy not found"
-	else
-		(which notify-send &>/dev/null && echo "FOUND: found notify-send") || echo "ERROR: notify-send (from libnotify-bin) not found"
-		(which scrot &>/dev/null && echo "FOUND: found scrot") || echo "ERROR: scrot not found"
-		(which xclip &>/dev/null && echo "FOUND: found xclip") || echo "ERROR: xclip not found"
-	fi
-	(which curl &>/dev/null && echo "FOUND: found curl") || echo "ERROR: curl not found"
-	exit 0
-fi
-
-##################################
-
 if [ "${1}" = "--help" ]; then
 	echo "usage: ${0} [-h | --check | -v]"
 	echo ""
 	echo "      --help                   Show this help screen to you."
 	echo "      --version                Show current application version."
 	echo "      --check                  Checks if dependencies are installed."
-	echo "      --screenshot             Begins the screenshot uploading process."
+	echo "      --update                 Checks if theres an update available."
 	echo "      --shorten                Begins the url shortening process."
-	echo "      --version                Displays the current version."
+	echo "      --screenshot             Begins the screenshot uploading process."
+	echo ""
+	exit 0
+fi
+
+##################################
+
+if [ "${1}" = "--version" ]; then
+	echo "INFO  : You are on version $current_version"
+fi
+
+##################################
+
+if [ "${1}" = "--check" ]; then
+	(which grep &>/dev/null && echo "FOUND: found grep") || echo "ERROR: grep not found"
+	if is_mac; then
+		if which terminal-notifier &>/dev/null; then
+			echo "FOUND : found terminal-notifier"
+		else
+			echo "ERROR : terminal-notifier not found"
+		fi
+		(which screencapture &>/dev/null && echo "FOUND : found screencapture") || echo "ERROR : screencapture not found"
+		(which pbcopy &>/dev/null && echo "FOUND : found pbcopy") || echo "ERROR : pbcopy not found"
+	else
+		(which notify-send &>/dev/null && echo "FOUND : found notify-send") || echo "ERROR : notify-send (from libnotify-bin) not found"
+		(which maim &>/dev/null && echo "FOUND : found maim") || echo "ERROR : maim not found"
+		(which xclip &>/dev/null && echo "FOUND : found xclip") || echo "ERROR : xclip not found"
+	fi
+	(which curl &>/dev/null && echo "FOUND : found curl") || echo "ERROR : curl not found"
 	exit 0
 fi
 
@@ -145,24 +150,18 @@ if [ "${1}" = "--shorten" ]; then
 				exit
 			fi
 		else
-			notify-send owoshorten "ERROR : Shortening failed!"
+			notify-send owoshorten "Shortening failed!"
 		fi
 	else
 		if is_mac; then
 			terminal-notifier -title owo.whats-th.is -message "Link is not valid!" -appIcon ./icon.icns
 		else
-			notify-send owoshorten "ERROR : Link is not valid!"
+			notify-send owoshorten "Link is not valid!"
 		fi
 		echo "ERROR : Link is not valid!"
 	fi
 
 	exit 0
-fi
-
-##################################
-
-if [ "${1}" = "--version" ]; then
-	echo "INFO  : You are on version $current_version"
 fi
 
 ##################################
@@ -235,4 +234,4 @@ check_key
 
 entry=$1
 upload=$(curl -F "files[]=@"$entry";type=image/png" https://api.whats-th.is/upload/pomf?key="$key")
-echo "Response:" $upload
+echo "RESP  : " $upload
