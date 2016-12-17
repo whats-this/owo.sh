@@ -17,11 +17,11 @@
 
 ##################################
 
-if [ "$EUID" -ne 0 ]; then 
-	echo "ERROR : You need to run the script as sudo."
-	echo "ERROR : It should look like \"sudo ./setup.sh\""
-	exit
-fi
+#if [ "$EUID" -ne 0 ]; then 
+#	echo "ERROR : You need to run the script as sudo."
+#	echo "ERROR : It should look like \"sudo ./setup.sh\""
+#	exit
+#fi
 
 ##################################
 
@@ -35,11 +35,9 @@ fi
 
 ##################################
 
-# Duplicate our script
-cp script.sh owo
+#Create a symbolic link to /usr/local/bin
+sudo ln -s $HOME/Documents/.owo/script.sh /usr/local/bin/owo
 
-# Move it to our new location
-mv owo /usr/local/bin/
 
 # Tell the user its done!
 echo "INFO  : Installation finished. Use it like \"owo file.png\""

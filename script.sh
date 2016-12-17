@@ -1,4 +1,4 @@
-\#!/bin/bash
+#!/bin/bash
 #                                   _                 _
 #                                  | |               | |
 #   _____      _____    _   _ _ __ | | ___   __ _  __| | ___ _ __
@@ -70,7 +70,7 @@ fi
 
 if [ "${1}" = "--version" ]; then
 	echo "INFO  : You are on version $current_version"
-	exit
+	exit 0
 fi
 
 ##################################
@@ -229,6 +229,7 @@ fi
 if [ ! -n "$1" ]; then
 	echo "ERROR : Incorrect Syntax."
 	echo "ERROR : Please use \"owo file.png\""
+	exit 1
 fi
 
 check_key
