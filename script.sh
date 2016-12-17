@@ -111,6 +111,34 @@ if [ "${1}" = "--update" ]; then
 fi
 
 ##################################
+if [ "${1}" = "--shorten" ]; then
+
+  check_key
+
+  notify-send owoshorten "Please enter the URL you wish to shorten."
+
+  echo "Please enter the URL you wish to shorten."
+
+  read url
+
+  regex='(https?|ftp|file)://[-A-Za-z0-9\+&@#/%?=~_|!:,.;]*[-A-Za-z0-9\+&@#/%=~_|]'
+  if [[ $url =~ $regex ]]; then
+    result=$(curl "https://api.whats-th.is/shorten/polr?action=shorten&key=$key&url=$url")
+    echo $result
+    if grep -q "https://" <<< "${result}"; then
+      echo $result | xclip -i -sel c -f |xclip -i -sel p
+      notify-send owoshorten "Copied the link to the keyboard."
+      exit
+    else
+      notify-send owoshorten "Shortening failed!"
+    fi
+  else
+    notify-send owoshorten "Link is not valid!"
+    echo "Link is not valid!"
+  fi
+fi
+
+##################################
 
 if [ "${1}" = "--screenshot" ]; then
 
