@@ -10,7 +10,7 @@
 #
 # OWOUPLOADER.SH SCRIPT.
 # ----------------------  
-#
+# 
 # This script is a port of a previous written script meant for uploading to
 # catgirlsare.sexy, however it had to be modified (slightly) in order to be
 # fixed for owo.whats-th.is, please enjoy!
@@ -18,7 +18,7 @@
 # Also a big thankyou to jomo/imgur-screenshot to which i've edited parts
 # of his script into my own, which included compatability with now, Linux!
 
-current_version="v0.0.1"
+current_version="v0.0.4"
 
 ##################################
 
@@ -54,8 +54,6 @@ function check_key() {
 ##################################
 
 if [ "${1}" = "--check" ]; then
-	echo ""
-
 	(which grep &>/dev/null && echo "FOUND: found grep") || echo "ERROR: grep not found"
 	if is_mac; then
 		if which terminal-notifier &>/dev/null; then
