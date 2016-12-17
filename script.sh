@@ -18,7 +18,7 @@
 # Also a big thankyou to jomo/imgur-screenshot to which i've edited parts
 # of his script into my own, which included compatability with now, Linux!
 
-current_version="v0.0.5"
+current_version="v0.0.6"
 
 ##################################
 
@@ -84,6 +84,7 @@ if [ "${1}" = "--help" ]; then
 	echo "      --check                  Checks if dependencies are installed."
 	echo "      --screenshot             Begins the screenshot uploading process."
 	echo "      --shorten                Begins the url shortening process."
+	echo "      --version                Displays the current version."
 	exit 0
 fi
 
@@ -115,41 +116,55 @@ if [ "${1}" = "--shorten" ]; then
 
 	check_key
 
-	#Tell our user the shortening has begun.
-	if is_mac; then
-		terminal-notifier -title owo.whats-th.is -message "Please enter the URL you wish to shorten."
+	if [ -z "${2}" ]; then
+		if is_mac; then
+			terminal-notifier -title owo.whats-th.is -message "Please enter the URL you wish to shorten." -appIcon ./icon.icns
+		else
+			notify-send owoshorten "Please enter the URL you wish to shorten."
+		fi
+
+		echo "INFO  : Please enter the URL you wish to shorten."
+		read url
 	else
-		notify-send owoshorten "Please enter the URL you wish to shorten."
+		url=${2}
 	fi
-	echo "Please enter the URL you wish to shorten."
-	read url
 
 	#Check if the URL entered is valid.
 	regex='(https?|ftp|file)://[-A-Za-z0-9\+&@#/%?=~_|!:,.;]*[-A-Za-z0-9\+&@#/%=~_|]'
 	if [[ $url =~ $regex ]]; then
 		result=$(curl "https://api.whats-th.is/shorten/polr?action=shorten&key=$key&url=$url")
-		echo $result
 
 		#Check if the URL got sucessfully shortened.
 		if grep -q "https://" <<< "${result}"; then
 			if is_mac; then
 				echo $result | pbcopy
-				terminal-notifier -title owo.whats-th.is -message "Copied the link to the keyboard."
+				terminal-notifier -title owo.whats-th.is -message "Copied the link to the keyboard." -appIcon ./icon.icns
 			else
 				echo $result | xclip -i -sel c -f |xclip -i -sel p
 				notify-send owo.whats-th.is "Copied the link to the keyboard."
 				exit
 			fi
 		else
-			notify-send owoshorten "Shortening failed!"
+			notify-send owoshorten "ERROR : Shortening failed!"
 		fi
 	else
-		notify-send owoshorten "Link is not valid!"
-		echo "Link is not valid!"
+		if is_mac; then
+			terminal-notifier -title owo.whats-th.is -message "Link is not valid!" -appIcon ./icon.icns
+		else
+			notify-send owoshorten "ERROR : Link is not valid!"
+		fi
+		echo "ERROR : Link is not valid!"
 	fi
 
 	exit 0
 fi
+
+##################################
+
+if [ "${1}" = "--version" ]; then
+	echo "INFO  : You are on version $current_version"
+fi
+
 ##################################
 
 if [ "${1}" = "--screenshot" ]; then
@@ -176,8 +191,6 @@ if [ "${1}" = "--screenshot" ]; then
 	# Open our new entry to use it!
 	entry=$path$filename
 	upload=$(curl -F "files[]=@"$entry";type=image/png" https://api.whats-th.is/upload/pomf?key="$key")
-	# For debugging, I echo the file.
-	echo $upload
 
 	if is_mac; then
 		if egrep -q '"success":\s*true' <<< "${upload}"; then
