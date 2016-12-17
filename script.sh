@@ -22,12 +22,12 @@ current_version="v0.0.7"
 
 ##################################
 
-if [ ! -d "${HOME}/Documents/.owo/" ]; then
+if [ ! -d "${HOME}/.config/owo/" ]; then
 	echo "INFO  : Could not find file, downloading..."
-	mkdir -p ${HOME}/Documents/.owo/
-	curl -s -o ${HOME}/Documents/.owo/conf.cfg https://cdn.rawgit.com/whats-this/owo.sh/master/conf.cfg
+	mkdir -p ${HOME}/.config/owo/
+	curl -s -o ${HOME}/.config/owo/conf.cfg https://cdn.rawgit.com/whats-this/owo.sh/master/conf.cfg
 fi
-source ${HOME}/Documents/.owo/conf.cfg
+source ${HOME}/.config/owo/conf.cfg
 
 key=$userkey >&2
 
