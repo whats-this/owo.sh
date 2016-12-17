@@ -18,6 +18,8 @@
 # Also a big thankyou to jomo/imgur-screenshot to which i've edited parts
 # of his script into my own, which included compatability with now, Linux!
 
+current_version="v0.0.1"
+
 ##################################
 
 if [ ! -d "${HOME}/Documents/.owo/" ]; then 
@@ -82,6 +84,29 @@ if [ "${1}" = "--help" ]; then
 	echo "      --check                  Checks if dependencies are installed."
 	echo "      --screenshot             Begins the screenshot uploading process."
 	echo "      --shorten                Begins the url shortening process."
+	exit 0
+fi
+
+##################################
+
+if [ "${1}" = "--update" ]; then
+	remote_version="$(curl --compressed -fsSL --stderr - "https://api.github.com/repos/whats-this/owo.sh/releases" | egrep -m 1 --color 'tag_name":\s*".*"' | cut -d '"' -f 4)"
+	if [ "${?}" -eq "0" ]; then
+		if [ ! "${current_version}" = "${remote_version}" ] && [ ! -z "${current_version}" ] && [ ! -z "${remote_version}" ]; then
+			echo "INFO  : Update found!"
+			echo "INFO  : Version ${remote_version} is available (You have ${current_version})"
+			echo "INFO  : Check https://github.com/whats-this/owo.sh/releases/${remote_version} for more info."
+		elif [ -z "${current_version}" ] || [ -z "${remote_version}" ]; then
+			echo "ERROR : Version string is invalid."
+			echo "INFO  : Current (local) version: '${current_version}'"
+			echo "INFO  : Latest (remote) version: '${remote_version}'"
+		else
+			echo "INFO  : Version ${current_version} is up to date."
+		fi
+	else
+		echo "ERROR : Failed to check for latest version: ${remote_version}"
+	fi
+
 	exit 0
 fi
 
