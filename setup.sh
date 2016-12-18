@@ -28,7 +28,8 @@ fi
 if [ "${1}" = "--uninstall" ]; then
 
 	rm /usr/local/bin/owo
-	echo "INFO  : Uninstallation finished!"
+	echo "INFO  : Uninstallation of owo.sh finished!"
+	echo "INFO  : However APT packages have not been removed."
 
 	exit 0
 fi
@@ -56,12 +57,13 @@ function is_mac() {
 
 # Install dependencies
 if is_mac; then
-	echo ""
+	echo "INFO  : Dependencies are unavaliable for Mac."
+	echo "INFO  : Please run \"owo --check\" to check later on."
 else
 	(which notify-send &>/dev/null && echo "FOUND : found screencapture") || apt-get install notify-send
-	(which maim &>/dev/null && echo "FOUND : found maim") || apt-get install notify-send
+	(which maim &>/dev/null && echo "FOUND : found maim") || apt-get install maim
 	(which xclip &>/dev/null && echo "FOUND : found xclip") || apt-get install xclip
 fi
 
 # Tell the user its done!
-echo "INFO  : Installation finished. Use it like \"owo file.png\""
+echo "INFO  : Installation finished of owo.sh. Use it like \"owo file.png\""

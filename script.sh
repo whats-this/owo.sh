@@ -18,14 +18,15 @@
 # A big thank you to jomo/imgur-screenshot to which I've edited parts
 # of his script into my own.
 
-current_version="v0.0.7"
+current_version="v0.0.8"
+config_version=1
 
 ##################################
 
 owodir="$HOME/.config/owo"
 
 if [ ! -d $owodir ]; then
-	echo "INFO  : Could not find config diretory. Please run setup.sh"
+	echo "INFO  : Could not find config directory. Please run setup.sh"
 	exit 1
 fi
 source $owodir/conf.cfg
@@ -36,6 +37,8 @@ directoryname=$scr_directory >&2
 filename=$scr_filename >&2
 path=$scr_path >&2
 
+print_debug=$debug >&2
+
 ##################################
 
 function is_mac() {
@@ -43,10 +46,11 @@ function is_mac() {
 }
 
 function check_key() {
-    if [ -z "$key" ]; then
-        echo "INFO  : \$key not found, please set \$userkey in your config file."
-        exit 1
-    fi
+	if [ -z "$key" ]; then
+		echo "INFO  : \$key not found, please set \$userkey in your config file."
+		echo "INFO  : You can find the key in $owodir/conf.cfg"
+		exit 1
+	fi
 }
 
 function notify() {
@@ -62,12 +66,12 @@ function notify() {
 if [ "${1}" = "--h" ] || [ "${1}" = "--help" ]; then
 	echo "usage: ${0} [-h | --check | -v]"
 	echo ""
-	echo "   -h --help                   Show this help screen to you."
-	echo "   -v --version                Show current application version."
-	echo "   -c --check                  Checks if dependencies are installed."
-	echo "      --update                 Checks if theres an update available."
-	echo "   -l --shorten                Begins the url shortening process."
-	echo "   -s --screenshot             Begins the screenshot uploading process."
+	echo "   --h --help                  Show this help screen to you."
+	echo "   --v --version               Show current application version."
+	echo "    -c --check                 Checks if dependencies are installed."
+	echo "       --update                Checks if theres an update available."
+	echo "    -l --shorten               Begins the url shortening process."
+	echo "    -s --screenshot            Begins the screenshot uploading process."
 	echo ""
 	exit 0
 fi
@@ -120,6 +124,7 @@ if [ "${1}" = "--update" ]; then
 fi
 
 ##################################
+
 if [ "${1}" = "-l" ] || [ "${1}" = "--shorten" ]; then
 
 	check_key
@@ -181,6 +186,10 @@ if [ "${1}" = "-s" ] || [ "${1}" = "--screenshot" ]; then
 	entry=$path$filename
 	upload=$(curl -F "files[]=@"$entry";type=image/png" https://api.whats-th.is/upload/pomf?key="$key")
 
+	if [ "$print_debug" = true ] ; then
+		echo $upload
+	fi
+
 	if egrep -q '"success":\s*true' <<< "${upload}"; then
 		item="$(egrep -o '"url":\s*"[^"]+"' <<<"${upload}" | cut -d "\"" -f 4)"
 		if is_mac; then
@@ -204,7 +213,7 @@ fi
 ##################################
 
 if [ ! -n "$1" ]; then
-	echo "ERROR : Incorrect syntax."
+	echo "ERROR : Sorry, but thats incorrect syntax."
 	echo "ERROR : Please use \"owo file.png\""
 	exit 1
 fi
@@ -213,4 +222,12 @@ check_key
 
 entry=$1
 upload=$(curl -F "files[]=@"$entry";type=image/png" https://api.whats-th.is/upload/pomf?key="$key")
+item="$(egrep -o '"url":\s*"[^"]+"' <<<"${upload}" | cut -d "\"" -f 4)"
+
+if [ "$print_debug" = true ] ; then
+	echo $upload
+fi
+
 echo "RESP  : " $upload
+echo "URL   : https://owo.whats-th.is/$item"
+
