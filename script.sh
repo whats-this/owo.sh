@@ -15,19 +15,21 @@
 # and url shortener component of whats-th.is. Through this you can do
 # plethora of actions.
 #
-# A big thankyou to jomo/imgur-screenshot to which i've edited parts
+# A big thank you to jomo/imgur-screenshot to which I've edited parts
 # of his script into my own.
 
-current_version="v0.0.7"
+current_version="v0.0.10"
+config_version=1
 
 ##################################
 
-if [ ! -d "${HOME}/.config/owo/" ]; then
-	echo "INFO  : Could not find file, downloading..."
-	mkdir -p ${HOME}/.config/owo/
-	curl -s -o ${HOME}/.config/owo/conf.cfg https://cdn.rawgit.com/whats-this/owo.sh/master/conf.cfg
+owodir="$HOME/.config/owo"
+
+if [ ! -d $owodir ]; then
+	echo "INFO  : Could not find config directory. Please run setup.sh"
+	exit 1
 fi
-source ${HOME}/.config/owo/conf.cfg
+source $owodir/conf.cfg
 
 key=$userkey >&2
 
@@ -35,19 +37,24 @@ directoryname=$scr_directory >&2
 filename=$scr_filename >&2
 path=$scr_path >&2
 
+print_debug=$debug >&2
+
 ##################################
 
 function is_mac() {
 	uname | grep -q "Darwin"
 }
 
-function check_key() {
-	if [ -z "$key" ]; then
-		echo "INFO  : \$key not found, please enter your key."
-		read key
-		if [[ -z "$key" ]]; then
-			check_key
-		fi
+function check_key() {https://raw.githubusercontent.com/whats-this/owo.sh/master/script.sh
+		exit 1
+	fi
+}
+
+function notify() {
+	if is_mac; then
+		terminal-notifier -title owo.whats-th.is -message "${1}" -appIcon $owodir/icon.icns
+	else
+		notify-send owo.whats-th.is "${1}" -i $owodir/icon.png
 	fi
 }
 
@@ -56,12 +63,12 @@ function check_key() {
 if [ "${1}" = "--h" ] || [ "${1}" = "--help" ]; then
 	echo "usage: ${0} [-h | --check | -v]"
 	echo ""
-	echo "   -h --help                   Show this help screen to you."
-	echo "   -v --version                Show current application version."
-	echo "   -c --check                  Checks if dependencies are installed."
-	echo "      --update                 Checks if theres an update available."
-	echo "   -l --shorten                Begins the url shortening process."
-	echo "   -s --screenshot             Begins the screenshot uploading process."
+	echo "   --h --help                  Show this help screen to you."
+	echo "   --v --version               Show current application version."
+	echo "    -c --check                 Checks if dependencies are installed."
+	echo "       --update                Checks if theres an update available."
+	echo "    -l --shorten               Begins the url shortening process."
+	echo "    -s --screenshot            Begins the screenshot uploading process."
 	echo ""
 	exit 0
 fi
@@ -76,13 +83,8 @@ fi
 ##################################
 
 if [ "${1}" = "-c" ] || [ "${1}" = "--check" ]; then
-	(which grep &>/dev/null && echo "FOUND : found grep") || echo "ERROR : grep not found"
 	if is_mac; then
-		if which terminal-notifier &>/dev/null; then
-			echo "FOUND : found terminal-notifier"
-		else
-			echo "ERROR : terminal-notifier not found"
-		fi
+		(which terminal-notifier &>/dev/null && echo "FOUND : found terminal-notifier") || echo "ERROR : terminal-notifier not found"
 		(which screencapture &>/dev/null && echo "FOUND : found screencapture") || echo "ERROR : screencapture not found"
 		(which pbcopy &>/dev/null && echo "FOUND : found pbcopy") || echo "ERROR : pbcopy not found"
 	else
@@ -91,6 +93,7 @@ if [ "${1}" = "-c" ] || [ "${1}" = "--check" ]; then
 		(which xclip &>/dev/null && echo "FOUND : found xclip") || echo "ERROR : xclip not found"
 	fi
 	(which curl &>/dev/null && echo "FOUND : found curl") || echo "ERROR : curl not found"
+	(which grep &>/dev/null && echo "FOUND : found grep") || echo "ERROR : grep not found"
 	exit 0
 fi
 
@@ -118,16 +121,13 @@ if [ "${1}" = "--update" ]; then
 fi
 
 ##################################
+
 if [ "${1}" = "-l" ] || [ "${1}" = "--shorten" ]; then
 
 	check_key
 
 	if [ -z "${2}" ]; then
-		if is_mac; then
-			terminal-notifier -title owo.whats-th.is -message "Please enter the URL you wish to shorten." -appIcon ./icon.icns
-		else
-			notify-send owoshorten "Please enter the URL you wish to shorten."
-		fi
+		notify "Please enter the URL you wish to shorten."
 
 		echo "INFO  : Please enter the URL you wish to shorten."
 		read url
@@ -144,21 +144,16 @@ if [ "${1}" = "-l" ] || [ "${1}" = "--shorten" ]; then
 		if grep -q "https://" <<< "${result}"; then
 			if is_mac; then
 				echo $result | pbcopy
-				terminal-notifier -title owo.whats-th.is -message "Copied the link to the keyboard." -appIcon ./icon.icns
 			else
-				echo $result | xclip -i -sel c -f |xclip -i -sel p
-				notify-send owo.whats-th.is "Copied the link to the keyboard."
-				exit
+				echo $result | xclip -i -sel c -f | xclip -i -sel p
 			fi
+			notify "Copied the link to the keyboard."
+			exit 0
 		else
-			notify-send owoshorten "Shortening failed!"
+			notify "Shortening failed!"
 		fi
 	else
-		if is_mac; then
-			terminal-notifier -title owo.whats-th.is -message "Link is not valid!" -appIcon ./icon.icns
-		else
-			notify-send owoshorten "Link is not valid!"
-		fi
+		notify "Link is not valid!"
 		echo "ERROR : Link is not valid!"
 	fi
 
@@ -172,11 +167,7 @@ if [ "${1}" = "-s" ] || [ "${1}" = "--screenshot" ]; then
 	check_key
 
 	# Alert the user that the upload has begun.
-	if is_mac; then
-		terminal-notifier -title owo.whats-th.is -message "Select an area to begin the upload." -appIcon ./icon.icns
-	else
-		notify-send owo.whats-th.is "Select an Area to Upload."
-	fi
+	notify "Select an area to begin the upload."
 
 	# Begin our screen capture.
 	if is_mac; then
@@ -192,42 +183,34 @@ if [ "${1}" = "-s" ] || [ "${1}" = "--screenshot" ]; then
 	entry=$path$filename
 	upload=$(curl -F "files[]=@"$entry";type=image/png" https://api.awau.moe/upload/pomf?key="$key")
 
-	if is_mac; then
-		if egrep -q '"success":\s*true' <<< "${upload}"; then
-			item="$(egrep -o '"url":\s*"[^"]+"' <<<"${upload}" | cut -d "\"" -f 4)"
+	if [ "$print_debug" = true ] ; then
+		echo $upload
+	fi
+
+	if egrep -q '"success":\s*true' <<< "${upload}"; then
+		item="$(egrep -o '"url":\s*"[^"]+"' <<<"${upload}" | cut -d "\"" -f 4)"
+		if is_mac; then
 			echo "https://owo.whats-th.is/$item" | pbcopy
-			terminal-notifier -title "Upload complete!" -message "Copied the link to your clipboard." -appIcon ./icon.icns
 		else
-			terminal-notifier -title "Upload failed!" -message "Please check your logs for details." -appIcon ./icon.icns
-			echo "UPLOAD FAILED" > log.txt
-			echo "The server left the following response" >> log.txt
-			echo "--------------------------------------" >> log.txt
-			echo " " >> log.txt
-			echo "    " $upload >> log.txt
-		fi
-	else
-		if egrep -q '"success":\s*true' <<< "${upload}"; then
-			item="$(egrep -o '"url":\s*"[^"]+"' <<<"${upload}" | cut -d "\"" -f 4)"
 			echo "https://owo.whats-th.is/$item" | xclip -i -sel c -f | xclip -i -sel p
-			notify-send -a owoscreenshot "Upload complete" "Copied the link to your clipboard." -t 500
-		else
-			notify-send -a owoscreenshot "Upload Failed" "Please check your logs for details." -i "$errnum" -t 500
-			echo "UPLOAD FAILED" > log.txt
-			echo "The server left the following response" >> log.txt
-			echo "--------------------------------------" >> log.txt
-			echo " " >> log.txt
-			echo "    " $upload >> log.txt
 		fi
+		notify "Upload complete! Copied the link to your clipboard."
+	else
+		notify "Upload failed! Please check your logs ($owodir/log.txt) for details."
+		echo "UPLOAD FAILED" > $owodir/log.txt
+		echo "The server left the following response" >> $owodir/log.txt
+		echo "--------------------------------------" >> $owodir/log.txt
+		echo " " >> $owodir/log.txt
+		echo "    " $upload >> $owodir/log.txt
 	fi
 
 	exit 0
-
 fi
 
 ##################################
 
 if [ ! -n "$1" ]; then
-	echo "ERROR : Incorrect Syntax."
+	echo "ERROR : Sorry, but thats incorrect syntax."
 	echo "ERROR : Please use \"owo file.png\""
 	exit 1
 fi
@@ -236,5 +219,11 @@ check_key
 
 entry=$1
 upload=$(curl -F "files[]=@"$entry";type=image/png" https://api.awau.moe/upload/pomf?key="$key")
+item="$(egrep -o '"url":\s*"[^"]+"' <<<"${upload}" | cut -d "\"" -f 4)"
+
+if [ "$print_debug" = true ] ; then
+	echo $upload
+fi
+
 echo "RESP  : " $upload
-echo $upload | xclip -i -sel c -f | xclip -i -sel p
+echo "URL   : https://owo.whats-th.is/$item"
