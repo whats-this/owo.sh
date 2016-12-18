@@ -17,11 +17,11 @@
 
 ##################################
 
-#if [ "$EUID" -ne 0 ]; then
-#	echo "ERROR : You need to run the script as sudo."
-#	echo "ERROR : It should look like \"sudo ./setup.sh\""
-#	exit
-#fi
+if [ $(id -u) -ne 0 ]; then
+	echo "ERROR : You need to run the script as sudo."
+	echo "ERROR : It should look like \"sudo ./setup.sh\""
+	exit 1
+fi
 
 ##################################
 
@@ -30,22 +30,27 @@ if [ "${1}" = "--uninstall" ]; then
 	rm /usr/local/bin/owo
 	echo "INFO  : Uninstallation finished!"
 
-	exit
+	exit 0
 fi
 
 ##################################
 
-#Create a symbolic link to /usr/local/bin
+scriptdir=$(dirname $(which $0))
 owodir="$HOME/.config/owo"
-if [ ! -d "$owodir" ]; then
-	mkdir "$HOME/.config/owo"
-  cp -r ./* $HOME/.config/owo
+
+if [ ! -d $owodir ]; then
+	mkdir $owodir
+	cp -r $scriptdir/* $owodir
 fi
 
-sudo ln -s $HOME/.config/owo/script.sh /usr/local/bin/owo
+# Give directory ownership to the actual user
+chown -R $(who am i | awk '{print $1}') $owodir
+
+# Create a symbolic link to /usr/local/bin
+ln -s $owodir/script.sh /usr/local/bin/owo
 
 function is_mac() {
-        uname | grep -q "Darwin"
+	uname | grep -q "Darwin"
 }
 
 
@@ -53,9 +58,9 @@ function is_mac() {
 if is_mac; then
 	echo ""
 else
-		(which notify-send &>/dev/null && echo "FOUND : found screencapture") || apt-get install notify-send
-		(which maim &>/dev/null && echo "FOUND : found maim") || apt-get install notify-send
-		(which xclip &>/dev/null && echo "FOUND : found xclip") || apt-get install xclip
+	(which notify-send &>/dev/null && echo "FOUND : found screencapture") || apt-get install notify-send
+	(which maim &>/dev/null && echo "FOUND : found maim") || apt-get install notify-send
+	(which xclip &>/dev/null && echo "FOUND : found xclip") || apt-get install xclip
 fi
 
 # Tell the user its done!
