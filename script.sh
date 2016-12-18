@@ -15,7 +15,7 @@
 # and url shortener component of whats-th.is. Through this you can do
 # plethora of actions.
 #
-# A big thankyou to jomo/imgur-screenshot to which i've edited parts
+# A big thank you to jomo/imgur-screenshot to which I've edited parts
 # of his script into my own.
 
 current_version="v0.0.7"
