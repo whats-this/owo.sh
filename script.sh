@@ -47,7 +47,6 @@ function is_mac() {
 
 function check_key()
 		exit 1
-	fi
 }
 
 function notify() {
