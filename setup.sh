@@ -35,17 +35,19 @@ fi
 
 ##################################
 
-#Create a symbolic link to /usr/local/bin
+scriptdir=$(dirname $(which $0))
 owodir="$HOME/.config/owo"
-if [ ! -d "$owodir" ]; then
-	mkdir "$HOME/.config/owo"
-  cp -r ./* $HOME/.config/owo
+
+if [ ! -d $owodir ]; then
+	mkdir $owodir
+	cp -r $scriptdir/* $owodir
 fi
 
-sudo ln -s $HOME/.config/owo/script.sh /usr/local/bin/owo
+#Create a symbolic link to /usr/local/bin
+sudo ln -s $owodir/script.sh /usr/local/bin/owo
 
 function is_mac() {
-        uname | grep -q "Darwin"
+	uname | grep -q "Darwin"
 }
 
 
@@ -53,9 +55,9 @@ function is_mac() {
 if is_mac; then
 	echo ""
 else
-		(which notify-send &>/dev/null && echo "FOUND : found screencapture") || apt-get install notify-send
-		(which maim &>/dev/null && echo "FOUND : found maim") || apt-get install notify-send
-		(which xclip &>/dev/null && echo "FOUND : found xclip") || apt-get install xclip
+	(which notify-send &>/dev/null && echo "FOUND : found screencapture") || apt-get install notify-send
+	(which maim &>/dev/null && echo "FOUND : found maim") || apt-get install notify-send
+	(which xclip &>/dev/null && echo "FOUND : found xclip") || apt-get install xclip
 fi
 
 # Tell the user its done!
