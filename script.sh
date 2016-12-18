@@ -138,7 +138,7 @@ if [ "${1}" = "-l" ] || [ "${1}" = "--shorten" ]; then
 	#Check if the URL entered is valid.
 	regex='(https?|ftp|file)://[-A-Za-z0-9\+&@#/%?=~_|!:,.;]*[-A-Za-z0-9\+&@#/%=~_|]'
 	if [[ $url =~ $regex ]]; then
-		result=$(curl "https://api.whats-th.is/shorten/polr?action=shorten&key=$key&url=$url")
+		result=$(curl "https://api.awau.moe/shorten/polr?action=shorten&key=$key&url=$url")
 
 		#Check if the URL got sucessfully shortened.
 		if grep -q "https://" <<< "${result}"; then
@@ -190,7 +190,7 @@ if [ "${1}" = "-s" ] || [ "${1}" = "--screenshot" ]; then
 
 	# Open our new entry to use it!
 	entry=$path$filename
-	upload=$(curl -F "files[]=@"$entry";type=image/png" https://api.whats-th.is/upload/pomf?key="$key")
+	upload=$(curl -F "files[]=@"$entry";type=image/png" https://api.awau.moe/upload/pomf?key="$key")
 
 	if is_mac; then
 		if egrep -q '"success":\s*true' <<< "${upload}"; then
@@ -235,5 +235,5 @@ fi
 check_key
 
 entry=$1
-upload=$(curl -F "files[]=@"$entry";type=image/png" https://api.whats-th.is/upload/pomf?key="$key")
+upload=$(curl -F "files[]=@"$entry";type=image/png" https://api.awau.moe/upload/pomf?key="$key")
 echo "RESP  : " $upload
