@@ -45,7 +45,7 @@ function is_mac() {
 	uname | grep -q "Darwin"
 }
 
-function check_key()
+function check_key() {
 	if [ -z "$key" ]; then
 		echo "INFO  : \$key not found, please set \$userkey in your config file."
 		echo "INFO  : You can find the key in $owodir/conf.cfg"
