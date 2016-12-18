@@ -45,7 +45,7 @@ function is_mac() {
 	uname | grep -q "Darwin"
 }
 
-function check_key() {https://raw.githubusercontent.com/whats-this/owo.sh/master/script.sh
+function check_key()
 		exit 1
 	fi
 }
