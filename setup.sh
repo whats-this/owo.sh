@@ -1,4 +1,4 @@
-#!/bin/bash
+b#!/bin/bash
 #                                   _                 _
 #                                  | |               | |
 #   _____      _____    _   _ _ __ | | ___   __ _  __| | ___ _ __
@@ -42,10 +42,9 @@ if [ ! -d "$owodir" ]; then
   cp -r ./* $HOME/.config/owo
 fi
 
-if [ ! -f /usr/local/bin/owo]; then
-	sudo ln -s $HOME/.config/owo/script.sh /usr/local/bin/owo
-else
-	echo "owo.sh already installed!"
+sudo ln -s $HOME/.config/owo/script.sh /usr/local/bin/owo
+echo "owo.sh already installed!"
+
 function is_mac() {
         uname | grep -q "Darwin"
 }
