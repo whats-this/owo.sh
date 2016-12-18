@@ -237,3 +237,4 @@ check_key
 entry=$1
 upload=$(curl -F "files[]=@"$entry";type=image/png" https://api.awau.moe/upload/pomf?key="$key")
 echo "RESP  : " $upload
+echo $upload | xclip -i -sel c -f | xclip -i -sel p
