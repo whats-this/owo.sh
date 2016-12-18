@@ -17,11 +17,11 @@
 
 ##################################
 
-#if [ "$EUID" -ne 0 ]; then
-#	echo "ERROR : You need to run the script as sudo."
-#	echo "ERROR : It should look like \"sudo ./setup.sh\""
-#	exit
-#fi
+if [ $(id -u) -ne 0 ]; then
+	echo "ERROR : You need to run the script as sudo."
+	echo "ERROR : It should look like \"sudo ./setup.sh\""
+	exit 1
+fi
 
 ##################################
 
@@ -30,7 +30,7 @@ if [ "${1}" = "--uninstall" ]; then
 	rm /usr/local/bin/owo
 	echo "INFO  : Uninstallation finished!"
 
-	exit
+	exit 0
 fi
 
 ##################################
@@ -43,8 +43,11 @@ if [ ! -d $owodir ]; then
 	cp -r $scriptdir/* $owodir
 fi
 
-#Create a symbolic link to /usr/local/bin
-sudo ln -s $owodir/script.sh /usr/local/bin/owo
+# Give directory ownership to the actual user
+chown -R $(who am i | awk '{print $1}') $owodir
+
+# Create a symbolic link to /usr/local/bin
+ln -s $owodir/script.sh /usr/local/bin/owo
 
 function is_mac() {
 	uname | grep -q "Darwin"
