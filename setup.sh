@@ -42,7 +42,7 @@ if [ ! -d "$owodir" ]; then
   cp -r ./* $HOME/.config/owo
 fi
 
-if [ ! -f /usr/local/bin/owo]; then
+if [ ! -f "/usr/local/bin/owo" ]; then
 	sudo ln -s $HOME/.config/owo/script.sh /usr/local/bin/owo
 else
 	echo "owo.sh already installed!"
@@ -55,7 +55,7 @@ function is_mac() {
 
 # Install dependencies
 if is_mac; then
-	continue
+	echo " "
 else
 	if [ ls /etc/*release | grep -i "lsb"]; then
 		(which notify-send &>/dev/null && echo "FOUND : found screencapture") || apt-get install notify-send
