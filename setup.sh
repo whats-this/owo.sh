@@ -46,6 +46,8 @@ if [ ! -f /usr/local/bin/owo]; then
 	sudo ln -s $HOME/.config/owo/script.sh /usr/local/bin/owo
 else
 	echo "owo.sh already installed!"
+fi
+
 function is_mac() {
         uname | grep -q "Darwin"
 }
