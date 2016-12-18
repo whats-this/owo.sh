@@ -46,7 +46,11 @@ function is_mac() {
 }
 
 function check_key()
+	if [ -z "$key" ]; then
+		echo "INFO  : \$key not found, please set \$userkey in your config file."
+		echo "INFO  : You can find the key in $owodir/conf.cfg"
 		exit 1
+	fi
 }
 
 function notify() {
