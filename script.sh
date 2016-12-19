@@ -18,7 +18,7 @@
 # A big thank you to jomo/imgur-screenshot to which I've edited parts
 # of his script into my own.
 
-current_version="v0.0.10"
+current_version="v0.0.12"
 config_version=1
 
 ##################################
