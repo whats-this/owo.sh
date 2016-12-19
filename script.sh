@@ -227,7 +227,7 @@ if [ "${1}" = "--update" ]; then
 		if [ ! "${current_version}" = "${remote_version}" ] && [ ! -z "${current_version}" ] && [ ! -z "${remote_version}" ]; then
 			echo "INFO  : Update found!"
 			echo "INFO  : Version ${remote_version} is available (You have ${current_version})"
-			echo "INFO  : Check https://github.com/whats-this/owo.sh/releases/${remote_version} for more info."
+			git pull origin ${remote_version}
 		elif [ -z "${current_version}" ] || [ -z "${remote_version}" ]; then
 			echo "ERROR : Version string is invalid."
 			echo "INFO  : Current (local) version: '${current_version}'"
