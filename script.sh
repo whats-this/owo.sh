@@ -61,24 +61,119 @@ function notify() {
 	fi
 }
 
+function shorten() {
+	check_key
+
+	if [ -z "${2}" ]; then
+		notify "Please enter the URL you wish to shorten."
+
+		echo "INFO  : Please enter the URL you wish to shorten."
+		read url
+	else
+		url=${2}
+	fi
+
+	#Check if the URL entered is valid.
+	regex='(https?|ftp|file)://[-A-Za-z0-9\+&@#/%?=~_|!:,.;]*[-A-Za-z0-9\+&@#/%=~_|]'
+	if [[ $url =~ $regex ]]; then
+		result=$(curl "https://api.awau.moe/shorten/polr?action=shorten&key=$key&url=$url")
+
+		#Check if the URL got sucessfully shortened.
+		if grep -q "https://" <<< "${result}"; then
+			d=$1
+			if [ "$d" = "true" ]; then
+				if [ "$url_copy" = "true" ]; then
+					if is_mac; then
+						echo $result | pbcopy
+					else
+						echo $result | xclip -i -sel c -f | xclip -i -sel p
+					fi
+					notify "Copied the link to the keyboard."
+				else
+					echo $result
+				fi
+			else
+				echo $result
+			fi
+		else
+			notify "Shortening failed!"
+		fi
+	else
+		notify "URL is not valid!"
+	fi
+}
+
+function screenshot() {
+	check_key
+
+	# Alert the user that the upload has begun.
+	notify "Select an area to begin the upload."
+
+	# Begin our screen capture.
+	if is_mac; then
+		screencapture -o -i $path$filename
+	else
+		maim -s $path$filename
+	fi
+
+	# Make a directory for our user if it doesnt already exsist.
+	mkdir -p $path
+
+	# Open our new entry to use it!
+	entry=$path$filename
+	upload=$(curl -F "files[]=@"$entry";type=image/png" https://api.awau.moe/upload/pomf?key="$key")
+
+	if [ "$print_debug" = true ] ; then
+		echo $upload
+	fi
+
+	if egrep -q '"success":\s*true' <<< "${upload}"; then
+		item="$(egrep -o '"url":\s*"[^"]+"' <<<"${upload}" | cut -d "\"" -f 4)"
+		d=$1
+		if [ "$d" = true ]; then
+			if [ "$scr_copy" = true ]; then
+				if is_mac; then
+					echo "https://owo.whats-th.is/$item" | pbcopy
+				else
+					echo "https://owo.whats-th.is/$item" | xclip -i -sel c -f | xclip -i -sel p
+				fi
+				notify "Upload complete! Copied the link to your clipboard."
+			else
+				echo "https://owo.whats-th.is/$item"
+			fi
+		else
+				output="https://owo.whats-th.is/$item"
+				echo "$output"
+		fi
+	else
+		notify "Upload failed! Please check your logs ($owodir/log.txt) for details."
+		echo "UPLOAD FAILED" > $owodir/log.txt
+		echo "The server left the following response" >> $owodir/log.txt
+		echo "--------------------------------------" >> $owodir/log.txt
+		echo " " >> $owodir/log.txt
+		echo "    " $upload >> $owodir/log.txt
+	fi
+}
+
+
 ##################################
 
-if [ "${1}" = "--h" ] || [ "${1}" = "--help" ]; then
+if [ "${1}" = "-h" ] || [ "${1}" = "--help" ]; then
 	echo "usage: ${0} [-h | --check | -v]"
 	echo ""
-	echo "   --h --help                  Show this help screen to you."
-	echo "   --v --version               Show current application version."
-	echo "    -c --check                 Checks if dependencies are installed."
-	echo "       --update                Checks if theres an update available."
-	echo "    -l --shorten               Begins the url shortening process."
-	echo "    -s --screenshot            Begins the screenshot uploading process."
+	echo "   -h --help                  Show this help screen to you."
+	echo "   -v --version               Show current application version."
+	echo "   -c --check                 Checks if dependencies are installed."
+	echo "      --update                Checks if theres an update available."
+	echo "   -l --shorten               Begins the url shortening process."
+	echo "   -s --screenshot            Begins the screenshot uploading process."
 	echo ""
 	exit 0
 fi
 
 ##################################
 
-if [ "${1}" = "--v" ] || [ "${1}" = "--version" ]; then
+if [ "${1}" = "-v" ] || [ "${1}" = "--version" ]; then
 	echo "INFO  : You are on version $current_version"
 	exit 0
 fi
@@ -126,92 +221,20 @@ fi
 ##################################
 
 if [ "${1}" = "-l" ] || [ "${1}" = "--shorten" ]; then
-
-	check_key
-
-	if [ -z "${2}" ]; then
-		notify "Please enter the URL you wish to shorten."
-
-		echo "INFO  : Please enter the URL you wish to shorten."
-		read url
-	else
-		url=${2}
-	fi
-
-	#Check if the URL entered is valid.
-	regex='(https?|ftp|file)://[-A-Za-z0-9\+&@#/%?=~_|!:,.;]*[-A-Za-z0-9\+&@#/%=~_|]'
-	if [[ $url =~ $regex ]]; then
-		result=$(curl "https://api.awau.moe/shorten/polr?action=shorten&key=$key&url=$url")
-
-		#Check if the URL got sucessfully shortened.
-		if grep -q "https://" <<< "${result}"; then
-			if is_mac; then
-				echo $result | pbcopy
-			else
-				echo $result | xclip -i -sel c -f | xclip -i -sel p
-			fi
-			notify "Copied the link to the keyboard."
-			exit 0
-		else
-			notify "Shortening failed!"
-		fi
-	else
-		notify "Link is not valid!"
-		echo "ERROR : Link is not valid!"
-	fi
-
+	shorten true
 	exit 0
 fi
+
+
 
 ##################################
 
 if [ "${1}" = "-s" ] || [ "${1}" = "--screenshot" ]; then
-
-	check_key
-
-	# Alert the user that the upload has begun.
-	notify "Select an area to begin the upload."
-
-	# Begin our screen capture.
-	if is_mac; then
-		screencapture -o -i $path$filename
-	else
-		maim -s $path$filename
-	fi
-
-	# Make a directory for our user if it doesnt already exsist.
-	mkdir -p $path
-
-	# Open our new entry to use it!
-	entry=$path$filename
-	upload=$(curl -F "files[]=@"$entry";type=image/png" https://api.awau.moe/upload/pomf?key="$key")
-
-	if [ "$print_debug" = true ] ; then
-		echo $upload
-	fi
-
-	if egrep -q '"success":\s*true' <<< "${upload}"; then
-		item="$(egrep -o '"url":\s*"[^"]+"' <<<"${upload}" | cut -d "\"" -f 4)"
-		if is_mac; then
-			echo "https://owo.whats-th.is/$item" | pbcopy
-		else
-			echo "https://owo.whats-th.is/$item" | xclip -i -sel c -f | xclip -i -sel p
-		fi
-		notify "Upload complete! Copied the link to your clipboard."
-	else
-		notify "Upload failed! Please check your logs ($owodir/log.txt) for details."
-		echo "UPLOAD FAILED" > $owodir/log.txt
-		echo "The server left the following response" >> $owodir/log.txt
-		echo "--------------------------------------" >> $owodir/log.txt
-		echo " " >> $owodir/log.txt
-		echo "    " $upload >> $owodir/log.txt
-	fi
-
+	screenshot true
 	exit 0
 fi
 
 ##################################
-
 if [ ! -n "$1" ]; then
 	echo "ERROR : Sorry, but thats incorrect syntax."
 	echo "ERROR : Please use \"owo file.png\""
@@ -228,5 +251,5 @@ if [ "$print_debug" = true ] ; then
 	echo $upload
 fi
 
-echo "RESP  : " $upload
+echo "RESP  : $upload"
 echo "URL   : https://owo.whats-th.is/$item"
