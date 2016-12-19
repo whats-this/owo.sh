@@ -18,6 +18,12 @@
 # A big thank you to jomo/imgur-screenshot to which I've edited parts
 # of his script into my own.
 
+if [ ! $(id -u) -ne 0 ]; then
+	echo "ERROR : This script cannot be run as sudo."
+	echo "ERROR : You need to remove the sudo from \"sudo ./setup.sh\"."
+	exit 1
+fi
+
 current_version="v0.0.12"
 config_version=1
 
