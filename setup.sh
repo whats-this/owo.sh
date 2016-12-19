@@ -67,3 +67,4 @@ fi
 
 # Tell the user its done!
 echo "INFO  : Installation finished of owo.sh. Use it like \"owo file.png\""
+echo "The config is in ~/.config/owo"

@@ -143,7 +143,6 @@ function screenshot() {
 			fi
 		else
 				output="https://owo.whats-th.is/$item"
-				echo "$output"
 		fi
 	else
 		notify "Upload failed! Please check your logs ($owodir/log.txt) for details."
@@ -155,6 +154,29 @@ function screenshot() {
 	fi
 }
 
+function upload() {
+
+
+
+	check_key
+
+	entry=$1
+	mimetype=$(file -b --mime-type $entry)
+	upload=$(curl -F "files[]=@"$entry";type=$mimetype" https://api.awau.moe/upload/pomf?key="$key")
+	item="$(egrep -o '"url":\s*"[^"]+"' <<<"${upload}" | cut -d "\"" -f 4)"
+
+	if [ "$print_debug" = true ] ; then
+		echo $upload
+	fi
+
+	d=$2
+	if [ "$d" = true ]; then
+		echo "RESP  : $upload"
+		echo "URL   : https://owo.whats-th.is/$item"
+	else
+		output="https://owo.whats-th.is/$item"
+	fi
+}
 
 ##################################
 
@@ -167,6 +189,8 @@ if [ "${1}" = "-h" ] || [ "${1}" = "--help" ]; then
 	echo "      --update                Checks if theres an update available."
 	echo "   -l --shorten               Begins the url shortening process."
 	echo "   -s --screenshot            Begins the screenshot uploading process."
+	echo "   -sl                        Takes a screenshot and shortens the URL."
+	echo "   -ul                        Uploads file and shortens URL."
 	echo ""
 	exit 0
 fi
@@ -235,21 +259,23 @@ if [ "${1}" = "-s" ] || [ "${1}" = "--screenshot" ]; then
 fi
 
 ##################################
-if [ ! -n "$1" ]; then
-	echo "ERROR : Sorry, but thats incorrect syntax."
-	echo "ERROR : Please use \"owo file.png\""
-	exit 1
+if [ "${1}" = "-sl" ]; then
+	screenshot false
+	shorten true $output
+	exit 0
 fi
 
-check_key
 
-entry=$1
-upload=$(curl -F "files[]=@"$entry";type=image/png" https://api.awau.moe/upload/pomf?key="$key")
-item="$(egrep -o '"url":\s*"[^"]+"' <<<"${upload}" | cut -d "\"" -f 4)"
-
-if [ "$print_debug" = true ] ; then
-	echo $upload
+##################################
+if [ "${1}" = "-ul" ]; then
+	if [ -z "$2" ]; then
+		echo "ERROR : Sorry, but thats incorrect syntax."
+		echo "ERROR : Please use \"owo file.png\""
+		exit 1
+	fi
+	upload ${2} false
+	shorten true $output
+	echo $result
+	exit 0
 fi
-
-echo "RESP  : $upload"
-echo "URL   : https://owo.whats-th.is/$item"
+upload ${1} true
