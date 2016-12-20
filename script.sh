@@ -82,7 +82,7 @@ function shorten() {
 	#Check if the URL entered is valid.
 	regex='(https?|ftp|file)://[-A-Za-z0-9\+&@#/%?=~_|!:,.;]*[-A-Za-z0-9\+&@#/%=~_|]'
 	if [[ $url =~ $regex ]]; then
-		result=$(curl "https://api.awau.moe/shorten/polr?action=shorten&key=$key&url=$url")
+		result=$(curl -s "https://api.awau.moe/shorten/polr?action=shorten&key=$key&url=$url")
 
 		#Check if the URL got sucessfully shortened.
 		if grep -q "https://" <<< "${result}"; then
@@ -128,7 +128,7 @@ function screenshot() {
 
 	# Open our new entry to use it!
 	entry=$path$filename
-	upload=$(curl -F "files[]=@"$entry";type=image/png" https://api.awau.moe/upload/pomf?key="$key")
+	upload=$(curl -s -F "files[]=@"$entry";type=image/png" https://api.awau.moe/upload/pomf?key="$key")
 
 	if [ "$print_debug" = true ] ; then
 		echo $upload
@@ -167,7 +167,7 @@ function upload() {
 
 	entry=$1
 	mimetype=$(file -b --mime-type $entry)
-	upload=$(curl -F "files[]=@"$entry";type=$mimetype" https://api.awau.moe/upload/pomf?key="$key")
+	upload=$(curl -s -F "files[]=@"$entry";type=$mimetype" https://api.awau.moe/upload/pomf?key="$key")
 	item="$(egrep -o '"url":\s*"[^"]+"' <<<"${upload}" | cut -d "\"" -f 4)"
 
 	if [ "$print_debug" = true ] ; then
