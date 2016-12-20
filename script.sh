@@ -94,6 +94,7 @@ function shorten() {
 					else
 						echo $result | xclip -i -sel c -f | xclip -i -sel p
 					fi
+					echo $result
 					notify "Copied the link to the keyboard."
 				else
 					echo $result
@@ -161,8 +162,6 @@ function screenshot() {
 }
 
 function upload() {
-
-
 
 	check_key
 
