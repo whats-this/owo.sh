@@ -24,7 +24,7 @@ if [ ! $(id -u) -ne 0 ]; then
 	exit 1
 fi
 
-current_version="v0.0.12"
+current_version="v0.0.13"
 config_version=1
 
 ##################################
@@ -233,7 +233,7 @@ if [ "${1}" = "--update" ]; then
 		if [ ! "${current_version}" = "${remote_version}" ] && [ ! -z "${current_version}" ] && [ ! -z "${remote_version}" ]; then
 			echo "INFO  : Update found!"
 			echo "INFO  : Version ${remote_version} is available (You have ${current_version})"
-			git -C pull origin ${remote_version}
+			git -C pull origin stable
 		elif [ -z "${current_version}" ] || [ -z "${remote_version}" ]; then
 			echo "ERROR : Version string is invalid."
 			echo "INFO  : Current (local) version: '${current_version}'"
