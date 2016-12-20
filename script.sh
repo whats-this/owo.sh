@@ -166,10 +166,15 @@ function upload() {
 	check_key
 
 	entry=$1
+	filesize=$(stat --printf="%s" $entry)
 	mimetype=$(file -b --mime-type $entry)
-	upload=$(curl -s -F "files[]=@"$entry";type=$mimetype" https://api.awau.moe/upload/pomf?key="$key")
-	item="$(egrep -o '"url":\s*"[^"]+"' <<<"${upload}" | cut -d "\"" -f 4)"
-
+	if [ "$filesize" -le "83886080" ]; then
+		upload=$(curl -s -F "files[]=@"$entry";type=$mimetype" https://api.awau.moe/upload/pomf?key="$key")
+		item="$(egrep -o '"url":\s*"[^"]+"' <<<"${upload}" | cut -d "\"" -f 4)"
+	else
+		echo "File size too large!"
+		exit 1
+	fi
 	if [ "$print_debug" = true ] ; then
 		echo $upload
 	fi
