@@ -37,6 +37,7 @@ fi
 source $owodir/conf.cfg
 
 key=$userkey >&2
+compat=$compatability_mode >&2
 
 output_url=$finished_url >&2
 
@@ -62,7 +63,11 @@ function check_key() {
 
 function notify() {
 	if is_mac; then
-		terminal-notifier -title owo.whats-th.is -message "${1}" -appIcon $owodir/icon.icns
+		if compat; then
+			/usr/local/bin/terminal-notifier -title owo.whats-th.is -message "${1}" -appIcon $owodir/icon.icns
+		else
+			terminal-notifier -title owo.whats-th.is -message "${1}" -appIcon $owodir/icon.icns
+		fi
 	else
 		notify-send owo.whats-th.is "${1}" -i $owodir/icon.png
 	fi
@@ -166,15 +171,23 @@ function upload() {
 	check_key
 
 	entry=$1
-	filesize=$(stat --printf="%s" $entry)
+	filesize=$(stat -printf="%s" $entry)
 	mimetype=$(file -b --mime-type $entry)
-	if [ "$filesize" -le "83886080" ]; then
+	
+	if is_mac; then
 		upload=$(curl -s -F "files[]=@"$entry";type=$mimetype" https://api.awau.moe/upload/pomf?key="$key")
 		item="$(egrep -o '"url":\s*"[^"]+"' <<<"${upload}" | cut -d "\"" -f 4)"
 	else
-		echo "File size too large!"
-		exit 1
+		if [[ $filesize -le 83886080 ]]; then
+			upload=$(curl -s -F "files[]=@"$entry";type=$mimetype" https://api.awau.moe/upload/pomf?key="$key")
+			item="$(egrep -o '"url":\s*"[^"]+"' <<<"${upload}" | cut -d "\"" -f 4)"
+		else
+			echo "ERROR : File size too large or another error occured!"
+			exit 1
+		fi
 	fi
+
+
 	if [ "$print_debug" = true ] ; then
 		echo $upload
 	fi
@@ -249,24 +262,24 @@ if [ "${1}" = "--update" ]; then
 
 			read -p "INFO  : Continue anyway? (Y/N)" choice
 			case "$choice" in 
-			y|Y ) runupdate;;
-  			n|N ) exit 0;;
-  			* ) echo "ERROR : That is an invalid response, (Y)es/(N)o.";;
-			esac
+				y|Y ) runupdate;;
+n|N ) exit 0;;
+* ) echo "ERROR : That is an invalid response, (Y)es/(N)o.";;
+esac
 
-			
-		elif [ -z "${current_version}" ] || [ -z "${remote_version}" ]; then
-			echo "ERROR : Version string is invalid."
-			echo "INFO  : Current (local) version: '${current_version}'"
-			echo "INFO  : Latest (remote) version: '${remote_version}'"
-		else
-			echo "INFO  : Version ${current_version} is up to date."
-		fi
-	else
-		echo "ERROR : Failed to check for latest version: ${remote_version}"
-	fi
 
-	exit 0
+elif [ -z "${current_version}" ] || [ -z "${remote_version}" ]; then
+	echo "ERROR : Version string is invalid."
+	echo "INFO  : Current (local) version: '${current_version}'"
+	echo "INFO  : Latest (remote) version: '${remote_version}'"
+else
+	echo "INFO  : Version ${current_version} is up to date."
+fi
+else
+	echo "ERROR : Failed to check for latest version: ${remote_version}"
+fi
+
+exit 0
 fi
 
 ##################################
