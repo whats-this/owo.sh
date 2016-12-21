@@ -43,10 +43,10 @@ if [ ! -d $owodir ]; then
 fi
 
 # Give directory ownership to the actual user
-chown -R $(who am i | awk '{print $1}') $owodir
+chown -R $(whoami | awk '{print $1}') $owodir
 
 # Create a symbolic link to /usr/local/bin
-ln -s $owodir/script.sh /usr/local/bin/owo
+sudo ln -s $owodir/script.sh /usr/local/bin/owo
 
 function is_mac() {
 	uname | grep -q "Darwin"
