@@ -24,8 +24,7 @@ if [ ! $(id -u) -ne 0 ]; then
 	exit 1
 fi
 
-current_version="v0.0.13"
-config_version=1
+current_version="v0.0.14"
 
 ##################################
 
@@ -38,6 +37,8 @@ fi
 source $owodir/conf.cfg
 
 key=$userkey >&2
+
+output_url=$finished_url >&2
 
 directoryname=$scr_directory >&2
 filename=$scr_filename >&2
@@ -72,7 +73,6 @@ function shorten() {
 
 	if [ -z "${2}" ]; then
 		notify "Please enter the URL you wish to shorten."
-
 		echo "INFO  : Please enter the URL you wish to shorten."
 		read url
 	else
@@ -140,16 +140,16 @@ function screenshot() {
 		if [ "$d" = true ]; then
 			if [ "$scr_copy" = true ]; then
 				if is_mac; then
-					echo "https://owo.whats-th.is/$item" | pbcopy
+					echo "https://$output_url/$item" | pbcopy
 				else
-					echo "https://owo.whats-th.is/$item" | xclip -i -sel c -f | xclip -i -sel p
+					echo "https://$output_url/$item" | xclip -i -sel c -f | xclip -i -sel p
 				fi
 				notify "Upload complete! Copied the link to your clipboard."
 			else
-				echo "https://owo.whats-th.is/$item"
+				echo "https://$output_url/$item"
 			fi
 		else
-				output="https://owo.whats-th.is/$item"
+			output="https://$output_url/$item"
 		fi
 	else
 		notify "Upload failed! Please check your logs ($owodir/log.txt) for details."
@@ -182,10 +182,16 @@ function upload() {
 	d=$2
 	if [ "$d" = true ]; then
 		echo "RESP  : $upload"
-		echo "URL   : https://owo.whats-th.is/$item"
+		echo "URL   : https://$output_url/$item"
 	else
-		output="https://owo.whats-th.is/$item"
+		output="https://$output_url/$item"
 	fi
+}
+
+function runupdate() {
+	cp $owodir/conf.cfg $owodir/conf_backup_$current_version.cfg
+
+	git -C pull origin stable
 }
 
 ##################################
@@ -237,7 +243,18 @@ if [ "${1}" = "--update" ]; then
 		if [ ! "${current_version}" = "${remote_version}" ] && [ ! -z "${current_version}" ] && [ ! -z "${remote_version}" ]; then
 			echo "INFO  : Update found!"
 			echo "INFO  : Version ${remote_version} is available (You have ${current_version})"
-			git -C pull origin stable
+
+			echo "ALERT : You already have a configuration file in $owodir"
+			echo "ALERT : Updating might break this config, are you sure you want to update?"
+
+			read -p "INFO  : Continue anyway? (Y/N)" choice
+			case "$choice" in 
+			y|Y ) runupdate;;
+  			n|N ) exit 0;;
+  			* ) echo "ERROR : That is an invalid response, (Y)es/(N)o.";;
+			esac
+
+			
 		elif [ -z "${current_version}" ] || [ -z "${remote_version}" ]; then
 			echo "ERROR : Version string is invalid."
 			echo "INFO  : Current (local) version: '${current_version}'"
@@ -259,8 +276,6 @@ if [ "${1}" = "-l" ] || [ "${1}" = "--shorten" ]; then
 	exit 0
 fi
 
-
-
 ##################################
 
 if [ "${1}" = "-s" ] || [ "${1}" = "--screenshot" ]; then
@@ -269,14 +284,15 @@ if [ "${1}" = "-s" ] || [ "${1}" = "--screenshot" ]; then
 fi
 
 ##################################
+
 if [ "${1}" = "-sl" ]; then
 	screenshot false
 	shorten true $output
 	exit 0
 fi
 
-
 ##################################
+
 if [ "${1}" = "-ul" ]; then
 	if [ -z "$2" ]; then
 		echo "ERROR : Sorry, but thats incorrect syntax."
@@ -288,4 +304,5 @@ if [ "${1}" = "-ul" ]; then
 	echo $result
 	exit 0
 fi
+
 upload ${1} true
