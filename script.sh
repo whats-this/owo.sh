@@ -37,8 +37,6 @@ fi
 source $owodir/conf.cfg
 
 key=$userkey >&2
-compat=$compatability_mode >&2
-
 output_url=$finished_url >&2
 
 directoryname=$scr_directory >&2
@@ -63,11 +61,7 @@ function check_key() {
 
 function notify() {
 	if is_mac; then
-		if compat; then
-			/usr/local/bin/terminal-notifier -title owo.whats-th.is -message "${1}" -appIcon $owodir/icon.icns
-		else
-			terminal-notifier -title owo.whats-th.is -message "${1}" -appIcon $owodir/icon.icns
-		fi
+		/usr/local/bin/terminal-notifier -title owo.whats-th.is -message "${1}" -appIcon $owodir/icon.icns
 	else
 		notify-send owo.whats-th.is "${1}" -i $owodir/icon.png
 	fi
