@@ -315,7 +315,11 @@ if [ "${1}" = "-ul" ]; then
 	upload ${2} false
 	shorten true $output
 	echo $result
+	echo $result | xclip -i -sel c -f | xclip -i -sel p
+	notify "Copied link to keyboard."
 	exit 0
 fi
 
 upload ${1} true
+echo $output | xclip -i -sel c -f | xclip -i -sel p
+notify "Copied link to keyboard."
