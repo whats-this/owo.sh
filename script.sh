@@ -171,9 +171,9 @@ function upload() {
 	check_key
 
 	entry=$1
-	filesize=$(stat -printf="%s" $entry)
+	filesize=$(stat --printf="%s" $entry)
 	mimetype=$(file -b --mime-type $entry)
-	
+
 	if is_mac; then
 		upload=$(curl -s -F "files[]=@"$entry";type=$mimetype" https://api.awau.moe/upload/pomf?key="$key")
 		item="$(egrep -o '"url":\s*"[^"]+"' <<<"${upload}" | cut -d "\"" -f 4)"
@@ -261,7 +261,7 @@ if [ "${1}" = "--update" ]; then
 			echo "ALERT : Updating might break this config, are you sure you want to update?"
 
 			read -p "INFO  : Continue anyway? (Y/N)" choice
-			case "$choice" in 
+			case "$choice" in
 				y|Y ) runupdate;;
 n|N ) exit 0;;
 * ) echo "ERROR : That is an invalid response, (Y)es/(N)o.";;
