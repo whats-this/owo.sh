@@ -16,14 +16,12 @@
 # client and for it to work.
 
 ##################################
-
-if [ $(id -u) -ne 0 ]; then
-	echo "ERROR : You need to run the script as sudo."
-	echo "ERROR : It should look like \"sudo ./setup.sh\""
-	exit 1
+if [ ! $(id -u) -ne 0 ]; then
+ 	echo "ERROR : This script cannot be run as sudo."
+ 	echo "ERROR : You need to remove the sudo from \"sudo ./setup.sh\"."
+ 	exit 1
 fi
-
-##################################
+ ##################################
 
 if [ "${1}" = "--uninstall" ]; then
 
