@@ -171,13 +171,13 @@ function upload() {
 	check_key
 
 	entry=$1
-	filesize=$(stat --printf="%s" $entry)
 	mimetype=$(file -b --mime-type $entry)
 
 	if is_mac; then
 		upload=$(curl -s -F "files[]=@"$entry";type=$mimetype" https://api.awau.moe/upload/pomf?key="$key")
 		item="$(egrep -o '"url":\s*"[^"]+"' <<<"${upload}" | cut -d "\"" -f 4)"
 	else
+		filesize=$(stat --printf="%s" $entry)
 		if [[ $filesize -le 83886080 ]]; then
 			upload=$(curl -s -F "files[]=@"$entry";type=$mimetype" https://api.awau.moe/upload/pomf?key="$key")
 			item="$(egrep -o '"url":\s*"[^"]+"' <<<"${upload}" | cut -d "\"" -f 4)"
