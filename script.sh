@@ -320,7 +320,7 @@ if [ "${1}" = "-ul" ]; then
 	    echo $result | pbcopy
 	else    
 	    echo $result | xclip -i -sel c -f | xclip -i -sel p
-	    
+        fi	    
 	notify "Copied link to keyboard."
 	exit 0
 fi
@@ -330,4 +330,5 @@ if is_mac; then
     echo $output | pbcopy
 else
     echo $output | xclip -i -sel c -f | xclip -i -sel p
+fi
 notify "Copied link to keyboard."
