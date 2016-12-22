@@ -177,7 +177,7 @@ function upload() {
 			exit 1
 		fi
 	else
-		filesize=$(stat -c="%s" script.sh)
+		filesize=$(stat --printf="%s" $entry)
 		if [[ $filesize -le 83886080 ]]; then
 			upload=$(curl -s -F "files[]=@"$entry";type=$mimetype" https://api.awau.moe/upload/pomf?key="$key")
 			item="$(egrep -o '"url":\s*"[^"]+"' <<<"${upload}" | cut -d "\"" -f 4)"
@@ -315,12 +315,12 @@ if [ "${1}" = "-ul" ]; then
 	upload ${2} false
 	shorten true $output
 	echo $result
-	
+
 	if is_mac; then
 	    echo $result | pbcopy
-	else    
+	else
 	    echo $result | xclip -i -sel c -f | xclip -i -sel p
-        fi	    
+        fi
 	notify "Copied link to keyboard."
 	exit 0
 fi
