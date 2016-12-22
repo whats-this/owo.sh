@@ -168,10 +168,16 @@ function upload() {
 	mimetype=$(file -b --mime-type $entry)
 
 	if is_mac; then
-		upload=$(curl -s -F "files[]=@"$entry";type=$mimetype" https://api.awau.moe/upload/pomf?key="$key")
-		item="$(egrep -o '"url":\s*"[^"]+"' <<<"${upload}" | cut -d "\"" -f 4)"
+		filesize=$(stat -f%z "$entry")
+		if [[ $filesize -le "83886080" ]]; then
+			upload=$(curl -s -F "files[]=@"$entry";type=$mimetype" https://api.awau.moe/upload/pomf?key="$key")
+			item="$(egrep -o '"url":\s*"[^"]+"' <<<"${upload}" | cut -d "\"" -f 4)"
+		else
+			echo "ERROR : File size too large or another error occured!"
+			exit 1
+		fi
 	else
-		filesize=$(stat --printf="%s" $entry)
+		filesize=$(stat -c="%s" script.sh)
 		if [[ $filesize -le 83886080 ]]; then
 			upload=$(curl -s -F "files[]=@"$entry";type=$mimetype" https://api.awau.moe/upload/pomf?key="$key")
 			item="$(egrep -o '"url":\s*"[^"]+"' <<<"${upload}" | cut -d "\"" -f 4)"
