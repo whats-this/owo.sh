@@ -34,6 +34,10 @@ if [ ! -d $owodir ]; then
 	echo "INFO  : Could not find config directory. Please run setup.sh"
 	exit 1
 fi
+
+if [ ! -d $path]; then
+	mkdir -p $path
+fi
 source $owodir/conf.cfg
 
 key=$userkey >&2
@@ -64,6 +68,12 @@ function notify() {
 		/usr/local/bin/terminal-notifier -title owo.whats-th.is -message "${1}" -appIcon $owodir/icon.icns
 	else
 		notify-send owo.whats-th.is "${1}" -i $owodir/icon.png
+	fi
+}
+
+function delete_scr() {
+	if [ "$keep_scr" != "true" ]; then
+		rm "$path$filename"
 	fi
 }
 
@@ -158,6 +168,7 @@ function screenshot() {
 		echo " " >> $owodir/log.txt
 		echo "    " $upload >> $owodir/log.txt
 	fi
+	delete_scr
 }
 
 function upload() {
