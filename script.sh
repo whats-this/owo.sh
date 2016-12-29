@@ -24,7 +24,7 @@ if [ ! $(id -u) -ne 0 ]; then
 	exit 1
 fi
 
-current_version="v0.0.14"
+current_version="v0.0.15"
 
 ##################################
 
