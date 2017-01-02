@@ -180,7 +180,7 @@ function upload() {
 
 	if is_mac; then
 		filesize=$(wc -c <"$entry")
-		if [ ! $filesize -ge 83886080 ]; then
+		if [ $filesize -le 83886081 ]; then
 			upload=$(curl -s -F "files[]=@"$entry";type=$mimetype" https://api.awau.moe/upload/pomf?key="$key")
 			item="$(egrep -o '"url":\s*"[^"]+"' <<<"${upload}" | cut -d "\"" -f 4)"
 		else
@@ -189,7 +189,7 @@ function upload() {
 		fi
 	else
 		filesize=$(stat --printf="%s" $entry)
-		if [[ $filesize -le 83886080 ]]; then
+		if [[ $filesize -le 83886081 ]]; then
 			upload=$(curl -s -F "files[]=@"$entry";type=$mimetype" https://api.awau.moe/upload/pomf?key="$key")
 			item="$(egrep -o '"url":\s*"[^"]+"' <<<"${upload}" | cut -d "\"" -f 4)"
 		else
