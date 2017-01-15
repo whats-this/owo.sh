@@ -24,7 +24,7 @@ if [ ! $(id -u) -ne 0 ]; then
 	exit 1
 fi
 
-current_version="v0.0.15"
+current_version="v0.0.16"
 
 ##################################
 
@@ -35,7 +35,7 @@ if [ ! -d $owodir ]; then
 	exit 1
 fi
 
-if [ ! -d $path]; then
+if [ ! -d $path ]; then
 	mkdir -p $path
 fi
 source $owodir/conf.cfg
@@ -77,17 +77,25 @@ function delete_scr() {
 	fi
 }
 
+function clipboard() {
+	if is_mac; then
+		echo "${1}" | pbcopy
+	else
+		echo "${1}" | xclip -i -sel c -f | xclip -i -sel p
+	fi
+}
+
 function shorten() {
 	check_key
 
 	if [ -z "${2}" ]; then
 		notify "Please enter the URL you wish to shorten."
 		echo "INFO  : Please enter the URL you wish to shorten."
+
 		read url
 	else
 		url=${2}
 	fi
-
 	#Check if the URL entered is valid.
 	regex='(https?|ftp|file)://[-A-Za-z0-9\+&@#/%?=~_|!:,.;]*[-A-Za-z0-9\+&@#/%=~_|]'
 	if [[ $url =~ $regex ]]; then
@@ -97,19 +105,11 @@ function shorten() {
 		if grep -q "https://" <<< "${result}"; then
 			d=$1
 			if [ "$d" = "true" ]; then
-				if [ "$url_copy" = "true" ]; then
-					if is_mac; then
-						echo $result | pbcopy
-					else
-						echo $result | xclip -i -sel c -f | xclip -i -sel p
-					fi
+					clipboard $result
 					echo $result
 					notify "Copied the link to the keyboard."
-				else
-					echo $result
-				fi
 			else
-				echo $result
+					echo $result
 			fi
 		else
 			notify "Shortening failed!"
@@ -148,11 +148,7 @@ function screenshot() {
 		d=$1
 		if [ "$d" = true ]; then
 			if [ "$scr_copy" = true ]; then
-				if is_mac; then
-					echo "https://$output_url/$item" | pbcopy
-				else
-					echo "https://$output_url/$item" | xclip -i -sel c -f | xclip -i -sel p
-				fi
+				clipboard "https://$output_url/$item"
 				notify "Upload complete! Copied the link to your clipboard."
 			else
 				echo "https://$output_url/$item"
@@ -178,17 +174,7 @@ function upload() {
 	entry=$1
 	mimetype=$(file -b --mime-type $entry)
 
-	if is_mac; then
 		filesize=$(wc -c <"$entry")
-		if [ $filesize -le 83886081 ]; then
-			upload=$(curl -s -F "files[]=@"$entry";type=$mimetype" https://api.awau.moe/upload/pomf?key="$key")
-			item="$(egrep -o '"url":\s*"[^"]+"' <<<"${upload}" | cut -d "\"" -f 4)"
-		else
-			echo "ERROR : File size too large or another error occured!"
-			exit 1
-		fi
-	else
-		filesize=$(stat --printf="%s" $entry)
 		if [[ $filesize -le 83886081 ]]; then
 			upload=$(curl -s -F "files[]=@"$entry";type=$mimetype" https://api.awau.moe/upload/pomf?key="$key")
 			item="$(egrep -o '"url":\s*"[^"]+"' <<<"${upload}" | cut -d "\"" -f 4)"
@@ -196,19 +182,22 @@ function upload() {
 			echo "ERROR : File size too large or another error occured!"
 			exit 1
 		fi
-	fi
 
-
-	if [ "$print_debug" = true ] ; then
-		echo $upload
-	fi
-
-	d=$2
-	if [ "$d" = true ]; then
-		echo "RESP  : $upload"
-		echo "URL   : https://$output_url/$item"
-	else
+	if egrep -q '"success":\s*true' <<< "${upload}"; then
+		d=$2
+		if [ "$d" = true ]; then
+				clipboard "https://$output_url/$item"
+			echo "https://$output_url/$item"
+		else
 		output="https://$output_url/$item"
+		fi
+	else
+		notify "Upload failed! Please check your logs ($owodir/log.txt) for details."
+		echo "UPLOAD FAILED" > $owodir/log.txt
+		echo "The server left the following response" >> $owodir/log.txt
+		echo "--------------------------------------" >> $owodir/log.txt
+		echo " " >> $owodir/log.txt
+		echo "    " $upload >> $owodir/log.txt
 	fi
 }
 
@@ -337,9 +326,4 @@ if [ "${1}" = "-ul" ]; then
 fi
 
 upload ${1} true
-if is_mac; then
-    echo $output | pbcopy
-else
-    echo $output | xclip -i -sel c -f | xclip -i -sel p
-fi
 notify "Copied link to keyboard."
