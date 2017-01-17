@@ -79,9 +79,9 @@ function delete_scr() {
 
 function clipboard() {
 	if is_mac; then
-		echo "${1}" | pbcopy
+		echo "${1}" | tr -d "\n\r" | pbcopy
 	else
-		echo "${1}" | xclip -i -sel c -f | xclip -i -sel p
+		echo "${1}" | tr -d "\n\r" | xclip -i -sel c -f | xclip -i -sel p
 	fi
 }
 
