@@ -204,9 +204,16 @@ function upload() {
 function runupdate() {
 	cp $owodir/conf.cfg $owodir/conf_backup_$current_version.cfg
 
-	git -C pull origin stable
+	if [ ! -d $owodir/.git ]; then
+		git -C $owodir init
+		git -C $owodir remote add origin https://github.com/whats-this/owo.sh.git
+		git -C $owodir fetch --all
+		git -C $owodir checkout -t origin/stable
+		git -C $owodir reset --hard origin/stable
+	else
+		git -C $owodir pull origin stable
+        fi
 }
-
 ##################################
 
 if [ "${1}" = "-h" ] || [ "${1}" = "--help" ]; then
