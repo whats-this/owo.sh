@@ -26,6 +26,7 @@ fi
 
 owodir="$HOME/.config/owo"
 
+current_version="v0.0.17"
 
 if [ "$PWD" == "$owodir" ]; then
 	current_version="v0.0.17"
