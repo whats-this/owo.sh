@@ -24,11 +24,17 @@ if [ ! $(id -u) -ne 0 ]; then
 	exit 1
 fi
 
-current_version="v0.0.16"
+owodir="$HOME/.config/owo"
 
+
+if [ "$PWD" == "$owodir" ]; then
+	current_version="v0.0.17"
+else
+	source $owodir/script.sh
+	current_version=$current_version >&2
+fi
 ##################################
 
-owodir="$HOME/.config/owo"
 
 if [ ! -d $owodir ]; then
 	echo "INFO  : Could not find config directory. Please run setup.sh"
@@ -204,9 +210,16 @@ function upload() {
 function runupdate() {
 	cp $owodir/conf.cfg $owodir/conf_backup_$current_version.cfg
 
-	git -C $owodir pull origin stable
+	if [ ! -d $owodir/.git ]; then
+		git -C $owodir init
+		git -C $owodir remote add origin https://github.com/whats-this/owo.sh.git
+		git -C $owodir fetch --all
+		git -C $owodir checkout -t origin/stable
+		git -C $owodir reset --hard origin/stable
+	else
+		git -C $owodir pull origin stable
+        fi
 }
-
 ##################################
 
 if [ "${1}" = "-h" ] || [ "${1}" = "--help" ]; then
@@ -251,6 +264,9 @@ fi
 ##################################
 
 if [ "${1}" = "--update" ]; then
+	if [ "${1}" = "-C" ]; then
+		owodir="${4}"
+	fi	
 	remote_version="$(curl --compressed -fsSL --stderr - "https://api.github.com/repos/whats-this/owo.sh/releases" | egrep -m 1 --color 'tag_name":\s*".*"' | cut -d '"' -f 4)"
 	if [ "${?}" -eq "0" ]; then
 		if [ ! "${current_version}" = "${remote_version}" ] && [ ! -z "${current_version}" ] && [ ! -z "${remote_version}" ]; then
