@@ -204,7 +204,7 @@ function upload() {
 function runupdate() {
 	cp $owodir/conf.cfg $owodir/conf_backup_$current_version.cfg
 
-	git -C pull origin stable
+	git -C $owodir pull origin stable
 }
 
 ##################################
