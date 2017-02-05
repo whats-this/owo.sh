@@ -58,9 +58,12 @@ if is_mac; then
 	echo "INFO  : Dependencies are unavaliable for Mac."
 	echo "INFO  : Please run \"owo --check\" to check later on."
 else
-	(which notify-send &>/dev/null && echo "FOUND : found screencapture") || apt-get install notify-send
-	(which maim &>/dev/null && echo "FOUND : found maim") || apt-get install maim
-	(which xclip &>/dev/null && echo "FOUND : found xclip") || apt-get install xclip
+	(which notify-send &>/dev/null && echo "FOUND : found notify-send") || sudo apt-get install notify-send
+	(which maim &>/dev/null && echo "FOUND : found maim") || sudo apt-get install maim
+	(which xclip &>/dev/null && echo "FOUND : found xclip") || sudo apt-get install xclip
+	(which scrot &>/dev/null && echo "FOUND : found scrot") || sudo apt-get install scrot
+fi
+
 fi
 
 # Tell the user its done!
