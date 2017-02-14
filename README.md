@@ -49,6 +49,16 @@ However the following flags can be placed after `owo` for the each of the result
 | -l    | --shorten        	| Begins the url shortening process. This can be done through application or another argument.       |
 | -s    | --screenshot     	| Begins the screenshot uploading process. Your OS should be able to guide you through this however. |
 
+# Using the Mac Workflow
+
+1. Unzip the workflow file `owo-uploader.workflow.zip`
+2. Click on the workflow file. When prompted to install, click yes.
+3. Go to `System Preferences > Keyboard > Shortcuts > Services`
+4. Scroll down to `General` and look for `owo-uploader`. Assign a shortcut to it.
+5. (Optional) Disable default screenshot keys in `System Preferences > Keyboard > Shortcuts > Screen Shots`
+
+Now when you press your selected shortcut, the screenshot uploader will be launched, without having to type anything in the shell.
+
 # Contribute
 
 1. Fork repo.
