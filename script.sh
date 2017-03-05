@@ -337,4 +337,5 @@ if [ "${1}" = "-ul" ]; then
 fi
 
 upload ${1} true
+echo $output
 notify "Copied link to keyboard."
