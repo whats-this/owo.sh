@@ -151,8 +151,11 @@ function screenshot() {
 			if [ "$scr_copy" = true ]; then
 				clipboard "https://$output_url/$item"
 				notify "Upload complete! Copied the link to your clipboard."
+				echo $output
+				echo "https://$output_url/$item"
 			else
 				echo "https://$output_url/$item"
+				echo $output
 			fi
 		else
 			output="https://$output_url/$item"
@@ -176,21 +179,23 @@ function upload() {
 	mimetype=$(file -b --mime-type $entry)
 
 		filesize=$(wc -c <"$entry")
-		if [[ $filesize -le 83886081 ]]; then
-			upload=$(curl -s -F "files[]=@"$entry";type=$mimetype" https://api.awau.moe/upload/pomf?key="$key")
-			item="$(egrep -o '"url":\s*"[^"]+"' <<<"${upload}" | cut -d "\"" -f 4)"
-		else
-			echo "ERROR : File size too large or another error occured!"
-			exit 1
-		fi
+		#if [[ $filesize -le 83886081 ]]; then
+		upload=$(curl -s -F "files[]=@"$entry";type=$mimetype" https://api.awau.moe/upload/pomf?key="$key")
+		item="$(egrep -o '"url":\s*"[^"]+"' <<<"${upload}" | cut -d "\"" -f 4)"
+		#else
+			# echo "ERROR : File size too large or another error occured!"
+			#exit 1
+			#upload=$(curl -s -F "files[]=@"$entry";type=$mimetype" https://api.awau.moe/upload/pomf?key="$key")
+                        #item="$(egrep -o '"url":\s*"[^"]+"' <<<"${upload}" | cut -d "\"" -f 4)"
+		#fi
 
 	if egrep -q '"success":\s*true' <<< "${upload}"; then
 		d=$2
 		if [ "$d" = true ]; then
 				clipboard "https://$output_url/$item"
-			echo "https://$output_url/$item"
+			echo "$output_url/$item"
 		else
-		output="https://$output_url/$item"
+		output="//$output_url/$item"
 		fi
 	else
 		notify "Upload failed! Please check your logs ($owodir/log.txt) for details."
@@ -337,5 +342,4 @@ if [ "${1}" = "-ul" ]; then
 fi
 
 upload ${1} true
-echo $output
 notify "Copied link to keyboard."
