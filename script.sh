@@ -27,12 +27,7 @@ fi
 
 owodir="$HOME/.config/owo"
 
-
-#if [ "$PWD" == "$owodir" ]; then
-#	current_version="v0.0.17"
-#else
-#	source $owodir/script.sh
-#fi
+current_version="v0.0.17"
 ##################################
 
 
