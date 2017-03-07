@@ -128,16 +128,20 @@ function screenshot() {
 
 	# Begin our screen capture.
 	if is_mac; then
-		screencapture -o -i $path$filename
+		mkdir /tmp/owoscr/ #makes a directory for the picture to be saved in (tmp so its not kept permanently hogging space)
+		cmdpic=`date +%s`.png
+		screencapture -o -i /tmp/owoscr/$cmdpic
 	else
-		maim -s $path$filename
+		mkdir /tmp/owoscr/ #makes a directory for the picture to be saved in (tmp so its not kept permanently hogging space)
+		cmdpic=`date +%s`.png
+		maim -s /tmp/owoscr/$cmdpic #takes a picture in the selected region
 	fi
 
 	# Make a directory for our user if it doesnt already exsist.
 	mkdir -p $path
 
 	# Open our new entry to use it!
-	entry=$path$filename
+	entry=/tmp/owoscr/$cmdpic
 	upload=$(curl -s -F "files[]=@"$entry";type=image/png" https://api.awau.moe/upload/pomf?key="$key")
 
 	if [ "$print_debug" = true ] ; then
@@ -149,10 +153,13 @@ function screenshot() {
 		d=$1
 		if [ "$d" = true ]; then
 			if [ "$scr_copy" = true ]; then
-				clipboard "https://$output_url/$item"
+				clipboard "$output_url/$item"
 				notify "Upload complete! Copied the link to your clipboard."
+				echo $output
+				echo "$output_url/$item"
 			else
-				echo "https://$output_url/$item"
+				echo "$output_url/$item"
+				echo $output
 			fi
 		else
 			output="https://$output_url/$item"
