@@ -1,4 +1,5 @@
 #!/bin/bash
+
 #                                   _                 _
 #                                  | |               | |
 #   _____      _____    _   _ _ __ | | ___   __ _  __| | ___ _ __
@@ -21,13 +22,17 @@
 if [ ! $(id -u) -ne 0 ]; then
 	echo "ERROR : This script cannot be run as sudo."
 	echo "ERROR : You need to remove the sudo from \"sudo ./setup.sh\"."
-	exit 1
+	exit 2
 fi
 
 owodir="$HOME/.config/owo"
 
-current_version="v0.0.17"
 
+#if [ "$PWD" == "$owodir" ]; then
+#	current_version="v0.0.17"
+#else
+#	source $owodir/script.sh
+#fi
 ##################################
 
 
@@ -60,7 +65,7 @@ function check_key() {
 	if [ -z "$key" ]; then
 		echo "INFO  : \$key not found, please set \$userkey in your config file."
 		echo "INFO  : You can find the key in $owodir/conf.cfg"
-		exit 1
+		exit 3
 	fi
 }
 
@@ -117,6 +122,7 @@ function shorten() {
 		fi
 	else
 		notify "URL is not valid!"
+                exit 4
 	fi
 }
 
@@ -164,6 +170,7 @@ function screenshot() {
 		echo "--------------------------------------" >> $owodir/log.txt
 		echo " " >> $owodir/log.txt
 		echo "    " $upload >> $owodir/log.txt
+                exit 1
 	fi
 	delete_scr
 }
@@ -190,7 +197,7 @@ function upload() {
 				clipboard "https://$output_url/$item"
 			echo "https://$output_url/$item"
 		else
-		output="https://$output_url/$item"
+		eval output="https://$output_url/$item"
 		fi
 	else
 		notify "Upload failed! Please check your logs ($owodir/log.txt) for details."
@@ -199,6 +206,7 @@ function upload() {
 		echo "--------------------------------------" >> $owodir/log.txt
 		echo " " >> $owodir/log.txt
 		echo "    " $upload >> $owodir/log.txt
+                exit 1
 	fi
 }
 
@@ -261,7 +269,7 @@ fi
 if [ "${1}" = "--update" ]; then
 	if [ "${1}" = "-C" ]; then
 		owodir="${4}"
-	fi	
+	fi
 	remote_version="$(curl --compressed -fsSL --stderr - "https://api.github.com/repos/whats-this/owo.sh/releases" | egrep -m 1 --color 'tag_name":\s*".*"' | cut -d '"' -f 4)"
 	if [ "${?}" -eq "0" ]; then
 		if [ ! "${current_version}" = "${remote_version}" ] && [ ! -z "${current_version}" ] && [ ! -z "${remote_version}" ]; then
@@ -296,7 +304,7 @@ fi
 ##################################
 
 if [ "${1}" = "-l" ] || [ "${1}" = "--shorten" ]; then
-	shorten true
+	shorten true ${2}
 	exit 0
 fi
 
@@ -337,5 +345,4 @@ if [ "${1}" = "-ul" ]; then
 fi
 
 upload ${1} true
-echo $output
 notify "Copied link to keyboard."
