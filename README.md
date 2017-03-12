@@ -21,14 +21,15 @@ Thank you to [jomo](https://github.com/jomo/) and his script [jomo/imgur-screens
 |      	     	 | GREP                         | Comes standard with all UNIX OSes and is used to (in this case) decipher JSON.
 |     	      	 | cURL                         | Comes standard with all UNIX OSes and is used to (in this case) upload to the owo server.
 
-##instructions
+#Instructions
 
 1. Clone the repo with `git clone https://github.com/whats-this/owo.sh.git`
 2. Make sure `script.sh` has permissions: `chmod a+x script.sh`.
-3. Download the dependencies, you can check what you need with `./script.sh --check`
-4. Put your token inside of `conf.cfg`, in `userkey="YOURUSERKEY"`
-5. Run the command `./setup.sh` to add the owo command.
-6. You can now run `owo file.png` from anywhere to upload `file.png`.
+3. Run `sudo ./setup.sh`
+4. Enter password and let dependencies install.
+5. Run `./script.sh`
+6. Put your token inside of `conf.cfg`, in `userkey="YOURUSERKEY"`
+7. You can now run `owo file.png` from anywhere to upload `file.png`.
 
 # Usage
 
