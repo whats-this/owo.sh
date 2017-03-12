@@ -150,6 +150,7 @@ function screenshot() {
 		d=$1
 		if [ "$d" = true ]; then
 			if [ "$scr_copy" = true ]; then
+                                echo "https://$output_url/$item"
 				clipboard "https://$output_url/$item"
 				notify "Upload complete! Copied the link to your clipboard."
 			else
