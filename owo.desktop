@@ -11,14 +11,12 @@ Version=1.0
 Name=OwO
 
 # A comment which can/will be used as a tooltip
-Comment=Flash card based learning tool
-
+Comment=Screenshoter, Uploader, and Shortener for owo
 # The path to the folder in which the executable is run
 Path=/usr/local/bin/owo-gui
 
 # The executable of the application, possibly with arguments.
-Exec=owo
-
+Exec=owo-gui
 # The name of the icon that will be used to display this entry
 Icon=/usr/share/applications/owo.png
 
