@@ -21,7 +21,7 @@ Thank you to [jomo](https://github.com/jomo/) and his script [jomo/imgur-screens
 |      	     	 | GREP                         | Comes standard with all UNIX OSes and is used to (in this case) decipher JSON.
 |     	      	 | cURL                         | Comes standard with all UNIX OSes and is used to (in this case) upload to the owo server.
 
-##instructions
+## Instructions
 
 1. Clone the repo with `git clone https://github.com/whats-this/owo.sh.git`
 2. Make sure `script.sh` has permissions: `chmod a+x script.sh`.
@@ -49,7 +49,7 @@ However the following flags can be placed after `owo` for the each of the result
 | -l    | --shorten        	| Begins the url shortening process. This can be done through application or another argument.       |
 | -s    | --screenshot     	| Begins the screenshot uploading process. Your OS should be able to guide you through this however. |
 
-# Using the Mac Workflow
+## Using the Mac Workflow
 
 1. Unzip the workflow file `owo-uploader.workflow.zip`
 2. Click on the workflow file. When prompted to install, click yes.
