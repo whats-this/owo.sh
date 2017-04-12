@@ -47,7 +47,7 @@ output_url=$finished_url >&2
 directoryname=$scr_directory >&2
 filename=$scr_filename >&2
 path=$scr_path >&2
-
+no_notify=$no_notify >&2
 print_debug=$debug >&2
 
 ##################################
@@ -65,11 +65,13 @@ function check_key() {
 }
 
 function notify() {
+      if no_notify=false; then
 	if is_mac; then
 		/usr/local/bin/terminal-notifier -title owo.whats-th.is -message "${1}" -appIcon $owodir/icon.icns
 	else
 		notify-send owo.whats-th.is "${1}" -i $owodir/icon.png
 	fi
+      fi
 }
 
 function delete_scr() {
