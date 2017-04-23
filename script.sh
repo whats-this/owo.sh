@@ -27,12 +27,7 @@ fi
 
 owodir="$HOME/.config/owo"
 
-
-#if [ "$PWD" == "$owodir" ]; then
-#	current_version="v0.0.17"
-#else
-#	source $owodir/script.sh
-#fi
+current_version="v0.0.17"
 ##################################
 
 
@@ -52,7 +47,7 @@ output_url=$finished_url >&2
 directoryname=$scr_directory >&2
 filename=$scr_filename >&2
 path=$scr_path >&2
-
+no_notify=no_notify >&2
 print_debug=$debug >&2
 
 ##################################
@@ -70,11 +65,13 @@ function check_key() {
 }
 
 function notify() {
+    if [ "$no_notify" == "false" ]; then
 	if is_mac; then
 		/usr/local/bin/terminal-notifier -title owo.whats-th.is -message "${1}" -appIcon $owodir/icon.icns
 	else
 		notify-send owo.whats-th.is "${1}" -i $owodir/icon.png
 	fi
+   fi
 }
 
 function delete_scr() {
@@ -179,10 +176,10 @@ function screenshot() {
 }
 
 function upload() {
-	if [ ! -f "$1" ]
+	if [ ! -f "$entry" ]
 	then
-	echo "$1 not found! Exiting..."
-        exit 1
+		echo "$entry not found! Exiting..."
+        	exit 1
         fi
 	check_key
 
@@ -353,4 +350,5 @@ if [ "${1}" = "-ul" ]; then
 fi
 
 upload ${1} true
+echo $output
 notify "Copied link to keyboard."
