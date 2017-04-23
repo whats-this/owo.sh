@@ -27,7 +27,12 @@ fi
 
 owodir="$HOME/.config/owo"
 
-current_version="v0.0.17"
+
+#if [ "$PWD" == "$owodir" ]; then
+#	current_version="v0.0.17"
+#else
+#	source $owodir/script.sh
+#fi
 ##################################
 
 
@@ -47,7 +52,7 @@ output_url=$finished_url >&2
 directoryname=$scr_directory >&2
 filename=$scr_filename >&2
 path=$scr_path >&2
-no_notify=$no_notify >&2
+
 print_debug=$debug >&2
 
 ##################################
@@ -65,13 +70,11 @@ function check_key() {
 }
 
 function notify() {
-      if no_notify=false; then
 	if is_mac; then
 		/usr/local/bin/terminal-notifier -title owo.whats-th.is -message "${1}" -appIcon $owodir/icon.icns
 	else
 		notify-send owo.whats-th.is "${1}" -i $owodir/icon.png
 	fi
-      fi
 }
 
 function delete_scr() {
@@ -111,6 +114,7 @@ function shorten() {
 					clipboard $result
 					echo $result
 					notify "Copied the link to the keyboard."
+                                        echo "$(date): $result" >> $owodir/shorten.log
 			else
 					echo $result
 			fi
@@ -152,15 +156,16 @@ function screenshot() {
 		d=$1
 		if [ "$d" = true ]; then
 			if [ "$scr_copy" = true ]; then
-                                echo "https://$output_url/$item"
 				clipboard "https://$output_url/$item"
 				notify "Upload complete! Copied the link to your clipboard."
+                                echo "https://$output_url/$item"
 			else
 				echo "https://$output_url/$item"
 			fi
 		else
 			output="https://$output_url/$item"
 		fi
+                echo "$(date): https://$output_url/$item" >> screenshot.log
 	else
 		notify "Upload failed! Please check your logs ($owodir/log.txt) for details."
 		echo "UPLOAD FAILED" > $owodir/log.txt
@@ -174,15 +179,14 @@ function screenshot() {
 }
 
 function upload() {
-
-	check_key
-	entry=$1
-        if [ ! -f "$entry" ]
-        then
-        	echo "$entry not found! Exiting..."
-        	exit 1
+	if [ ! -f "$1" ]
+	then
+	echo "$1 not found! Exiting..."
+        exit 1
         fi
+	check_key
 
+	entry=$1
 	mimetype=$(file -b --mime-type $entry)
 
 		filesize=$(wc -c <"$entry")
@@ -199,6 +203,7 @@ function upload() {
 		if [ "$d" = true ]; then
 				clipboard "https://$output_url/$item"
 			echo "https://$output_url/$item"
+                echo "$(date): https://$output_url/$item" >> upload.log
 		else
 		eval output="https://$output_url/$item"
 		fi
@@ -348,5 +353,4 @@ if [ "${1}" = "-ul" ]; then
 fi
 
 upload ${1} true
-echo $output
 notify "Copied link to keyboard."
