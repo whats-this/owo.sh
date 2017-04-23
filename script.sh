@@ -176,8 +176,13 @@ function screenshot() {
 function upload() {
 
 	check_key
-
 	entry=$1
+        if [ ! -f "$entry" ]
+        then
+        	echo "$entry not found! Exiting..."
+        	exit 1
+        fi
+
 	mimetype=$(file -b --mime-type $entry)
 
 		filesize=$(wc -c <"$entry")
