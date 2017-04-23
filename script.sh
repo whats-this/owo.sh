@@ -223,7 +223,7 @@ function runupdate() {
 }
 ##################################
 
-if [ "${1}" = "-h" ] || [ "${1}" = "--help" ]; then
+if [ "${1}" = "-h" ] || [ "${1}" = "--help" ] || [ "${1}" = "" ]; then
 	echo "usage: ${0} [-h | --check | -v]"
 	echo ""
 	echo "   -h --help                  Show this help screen to you."
