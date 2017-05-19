@@ -199,7 +199,7 @@ function upload() {
 		d=$2
 		if [ "$d" = true ]; then
 				clipboard "https://$output_url/$item"
-			echo "https://$output_url/$item"
+			echo "https://$output_url/$item"http://repo.dmulloy2.net/nexus/repository/public/
                 echo "$(date): https://$output_url/$item" >> upload.log
 		else
 		eval output="https://$output_url/$item"
@@ -216,7 +216,7 @@ function upload() {
 }
 
 function runupdate() {
-	cp $owodir/conf.cfg $owodir/conf_backup_$current_version.cfg
+    cp $owodir/conf.cfg $owodir/conf_backup_$current_version.cfg
 
 	if [ ! -d $owodir/.git ]; then
 		git -C $owodir init
@@ -228,6 +228,7 @@ function runupdate() {
 		git -C $owodir pull origin stable
         fi
 }
+
 ##################################
 
 if [ "${1}" = "-h" ] || [ "${1}" = "--help" ] || [ "${1}" = "" ]; then
@@ -241,6 +242,7 @@ if [ "${1}" = "-h" ] || [ "${1}" = "--help" ] || [ "${1}" = "" ]; then
 	echo "   -s --screenshot            Begins the screenshot uploading process."
 	echo "   -sl                        Takes a screenshot and shortens the URL."
 	echo "   -ul                        Uploads file and shortens URL."
+	echo "   -fu                        Updates the finished URL."
 	echo ""
 	exit 0
 fi
@@ -270,6 +272,19 @@ if [ "${1}" = "-c" ] || [ "${1}" = "--check" ]; then
 fi
 
 ##################################
+
+if [ "${1}" = "-fu" ]; then
+	if [ -z "${2}" ]; then
+		notify "Please enter the new finished URL."
+		echo "INFO  : Please enter the new finished URL."
+		exit 0
+	fi
+    
+    sed -i "/finished_url*/s/.*/finished_url=\"${2}\"/" $owodir/conf.cfg
+    echo "INFO  : Changed finished_url to ${2}"
+    notify "Updated finished_url"
+	exit 0
+fi
 
 if [ "${1}" = "--update" ]; then
 	if [ "${1}" = "-C" ]; then
