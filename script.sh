@@ -49,7 +49,7 @@ filename=$scr_filename >&2
 path=$scr_path >&2
 no_notify=no_notify >&2
 print_debug=$debug >&2
-
+shorten_url=$shorten_url >&2
 ##################################
 
 function is_mac() {
@@ -106,6 +106,8 @@ function shorten() {
 
 		#Check if the URL got sucessfully shortened.
 		if grep -q "https://" <<< "${result}"; then
+			code=$(echo $result | sed 's/.*oe//')
+			result="https://$shorten_url$code"
 			d=$1
 			if [ "$d" = "true" ]; then
 					clipboard $result
