@@ -27,7 +27,7 @@ fi
 
 owodir="$HOME/.config/owo"
 
-current_version="v0.0.18"
+current_version="v0.0.19"
 ##################################
 
 
