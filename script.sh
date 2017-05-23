@@ -27,7 +27,7 @@ fi
 
 owodir="$HOME/.config/owo"
 
-current_version="v0.0.17"
+current_version="v0.0.18"
 ##################################
 
 
@@ -47,7 +47,7 @@ output_url=$finished_url >&2
 directoryname=$scr_directory >&2
 filename=$scr_filename >&2
 path=$scr_path >&2
-no_notify=no_notify >&2
+no_notify=$no_notify >&2
 print_debug=$debug >&2
 shorten_url=$shorten_url >&2
 ##################################
