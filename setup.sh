@@ -8,7 +8,7 @@
 #                            | |
 #                            |_|
 #
-# OWOUPLOADER.SH SCRIPT.
+# OWO.SH SCRIPT.
 # ----------------------
 #
 # This script is designed for you to be able to run the
@@ -37,12 +37,14 @@ fi
 scriptdir=$(dirname $(which $0))
 owodir="$HOME/.config/owo"
 
-if [ ! -d $owodir ]; then
-	mkdir $owodir
-fi
 if [ -d $owodir ]; then
 	cp $owodir/conf.cfg $owodir/conf.cfg.bak
 fi
+
+if [ ! -d $owodir ]; then
+	mkdir $owodir
+fi
+
 cp -r $scriptdir/* $owodir
 
 # Give directory ownership to the actual user

@@ -9,7 +9,7 @@
 #                            | |
 #                            |_|
 #
-# OWOUPLOADER.SH SCRIPT.
+# OWO.SH SCRIPT.
 # ----------------------
 #
 # This script allows for native support to upload to the image server
