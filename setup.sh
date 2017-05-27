@@ -40,6 +40,9 @@ owodir="$HOME/.config/owo"
 if [ ! -d $owodir ]; then
 	mkdir $owodir
 fi
+if [ -d $owodir ]; then
+	cp $owodir/conf.cfg $owodir/conf.cfg.bak
+fi
 cp -r $scriptdir/* $owodir
 
 # Give directory ownership to the actual user
@@ -47,7 +50,7 @@ chown -R $(whoami | awk '{print $1}') $owodir
 
 # Create a symbolic link to /usr/local/bin
 if [ ! -f /usr/local/bin/owo ]; then
-sudo ln -s $owodir/script.sh /usr/local/bin/owo
+  sudo ln -s $owodir/script.sh /usr/local/bin/owo
 fi
 function is_mac() {
 	uname | grep -q "Darwin"
