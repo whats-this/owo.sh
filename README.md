@@ -4,8 +4,6 @@ A basic example/uploader for uploading to [owo-whats-th.is](https://owo.whats-th
 
 Thank you to [jomo](https://github.com/jomo/) and his script [jomo/imgur-screenshot](https://github.com/jomo/imgur-screenshot), to which taking snippets and borrowing code has guided me to improving my own script. This script wouldn't be anywhere near what it is today without his efforts.
 
-# Install
-
 ## Dependencies
 
 | os         	 | dependency                   | description
@@ -21,14 +19,14 @@ Thank you to [jomo](https://github.com/jomo/) and his script [jomo/imgur-screens
 |      	     	 | GREP                         | Comes standard with all UNIX OSes and is used to (in this case) decipher JSON.
 |     	      	 | cURL                         | Comes standard with all UNIX OSes and is used to (in this case) upload to the owo server.
 
-## Instructions
+## Installation
 
 1. Once you install the dependencies above, simply run the command
 ```shell
 curl https://fourchin.net/owo.sh | bash
 ```
 in your terminal.
-# Usage
+## Usage
 
 Basic usage of the script is like so.
 
