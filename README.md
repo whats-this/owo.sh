@@ -1,4 +1,4 @@
-# owo.sh
+# OwO.sh
 
 A basic example/uploader for uploading to [owo-whats-th.is](https://owo.whats-th.is)'s image server. The aim was to have a script that allowed for users of all operating systems (that werent already supported by ShareX) to also be able to upload to whats-th.is related products.
 
@@ -6,7 +6,7 @@ Thank you to [jomo](https://github.com/jomo/) and his script [jomo/imgur-screens
 
 # Install
 
-## dependencies
+## Dependencies
 
 | os         	 | dependency                   | description
 |--------------- |----------------------------- |-----------------------------------------------------------------------------------------------------
@@ -16,20 +16,18 @@ Thank you to [jomo](https://github.com/jomo/) and his script [jomo/imgur-screens
 |      	     	 | GREP                         | Comes standard with all UNIX OSes and is used to (in this case) decipher JSON.
 |      	     	 | cURL                         | Comes standard with all UNIX OSes and is used to (in this case) upload to the owo server.
 | Linux     	 | Notify-Send                  | Default Linux barely has any, if at all, notification support from terminal. This is a workaround.
-|       	     | Maim                         | A rich screenshotting client, that better than what comes default with Linux.
+|       	 | Maim                         | A rich screenshotting client, that better than what comes default with Linux.
 |     	     	 | XClip                        | Comes default with most UNIX based OSes and allows for things to copied to clipboards.
 |      	     	 | GREP                         | Comes standard with all UNIX OSes and is used to (in this case) decipher JSON.
 |     	      	 | cURL                         | Comes standard with all UNIX OSes and is used to (in this case) upload to the owo server.
 
 ## Instructions
 
-1. Clone the repo with `git clone https://github.com/whats-this/owo.sh.git`
-2. Make sure `script.sh` has permissions: `chmod a+x script.sh`.
-3. Download the dependencies, you can check what you need with `./script.sh --check`
-4. Put your token inside of `conf.cfg`, in `userkey="YOURUSERKEY"`
-5. Run the command `./setup.sh` to add the owo command.
-6. You can now run `owo file.png` from anywhere to upload `file.png`.
-
+1. Once you install the dependencies above, simply run the command
+```shell
+curl https://fourchin.net/owo.sh | bash
+```
+in your terminal.
 # Usage
 
 Basic usage of the script is like so.
@@ -59,13 +57,13 @@ However the following flags can be placed after `owo` for the each of the result
 
 Now when you press your selected shortcut, the screenshot uploader will be launched, without having to type anything in the shell.
 
-# Contribute
+### Contributing
 
-1. Fork repo.
-2. Edit code.
-3. Make a PR.
-4. Submit said PR.
+Pull requests are accepted. Make sure you add test suites for new features and
+make sure the code passes the spec (so the build doesn't break). Tests are
+automatically run when commits are made in a pull request.
 
-# License
+### License
 
-A copy of the MIT license can be found in `LICENSE.md`.
+The contents of this repository are licensed under the MIT license. A
+copy of the MIT license can be found in [LICENSE.md](LICENSE.md).
