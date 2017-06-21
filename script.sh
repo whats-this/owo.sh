@@ -9,7 +9,7 @@
 #                            | |
 #                            |_|
 #
-# OWOUPLOADER.SH SCRIPT.
+# OWO.SH SCRIPT.
 # ----------------------
 #
 # This script allows for native support to upload to the image server
@@ -27,7 +27,7 @@ fi
 
 owodir="$HOME/.config/owo"
 
-current_version="v0.0.17"
+current_version="v0.0.19"
 ##################################
 
 
@@ -47,9 +47,9 @@ output_url=$finished_url >&2
 directoryname=$scr_directory >&2
 filename=$scr_filename >&2
 path=$scr_path >&2
-no_notify=no_notify >&2
+no_notify=$no_notify >&2
 print_debug=$debug >&2
-
+shorten_url=$shorten_url >&2
 ##################################
 
 function is_mac() {
@@ -88,6 +88,101 @@ function clipboard() {
 	fi
 }
 
+function keyset() {
+	read -p "Please enter your API key: " keystring
+	sed -i /userkey=/c\userkey="$keystring" $owodir/conf.cfg
+	echo "Saved."
+	echo ""
+	settings
+}
+
+function finishset() {
+	read -p "Please enter your preferred URL for upload/screenshot: " finishstring
+	if [ $finishstring = "q" ]; then
+		settings
+	fi
+	sed -i /finished_url=/c\finished_url="$finishstring" $owodir/conf.cfg
+	echo "Saved."
+	echo ""
+	settings
+}
+
+function shortenset() {
+	read -p "Please enter your preferred URL for shortening: " shortenstring
+	if [ $finishstring = "q" ]; then
+		settings
+	fi
+	sed -i /shorten_url=/c\shorten_url="$shortenstring" $owodir/conf.cfg
+	echo "Saved."
+	echo ""
+	settings
+}
+
+function notif_prefs() {
+	read -p "Would you like to recieve notifications from OwO.sh? (y/n/q) " choice
+	case $choice in
+		y|Y ) sed -i /no_notify=/c\no_notify=false $owodir/conf.cfg; echo "Saved."; echo ""; misc;;
+	  n|N ) sed -i /no_notify=/c\no_notify=true $owodir/conf.cfg; echo "Saved."; echo ""; misc;;
+		q|Q ) echo ""; misc;;
+		* ) echo "Invalid selection. Please choose y or n.";;
+	esac
+}
+
+function scrsave_prefs() {
+	read -p "Would you like to save screenshots to your local? (y/n/q) " choice
+	case $choice in
+		y|Y ) sed -i /keep_scr=/c\keep_scr=true $owodir/conf.cfg; echo "Saved."; echo ""; misc;;
+	  n|N ) sed -i /keep_scr=/c\keep_scr=false $owodir/conf.cfg; echo "Saved."; echo ""; misc;;
+		q|Q ) echo ""; misc;;
+		* ) echo "Invalid selection. Please choose y or n.";;
+	esac
+}
+
+function xclip_prefs() {
+	read -p "Would you like links to be copied to your clipboard? (y/n/q) " choice
+	case $choice in
+		y|Y ) sed -i /scr_copy=/c\scr_copy=true $owodir/conf.cfg; sed -i /url_copy=/c\url_copy=true $owodir/conf.cfg; echo "Saved."; echo ""; misc;;
+		n|N ) sed -i /scr_copy=/c\scr_copy=false $owodir/conf.cfg; sed -i /url_copy=/c\url_copy=false $owodir/conf.cfg; echo "Saved."; echo ""; misc;;
+		q|Q ) echo ""; misc;;
+		* ) echo "Invalid selection. Please choose y or n."; misc;;
+	esac
+}
+
+function misc() {
+	echo "Miscellaneous Settings"
+	echo "1) Notification preferences"
+	echo "2) Screenshot saving preferences"
+	echo "3) Clipboard copying preferences"
+	echo "4) Go back"
+	read -p "Please enter your selection: " selection
+	case $selection in
+		1 ) notif_prefs;;
+		2 ) scrsave_prefs;;
+		3 ) xclip_prefs;;
+		4 ) settings;;
+		* ) echo "Invalid selection. Please choose 1, 2 or 3."; misc;;
+	esac
+}
+
+function settings() {
+	echo "OwO.sh Settings"
+	echo "1) API Key"
+	echo "2) Upload/Screenshot URL"
+	echo "3) Shorten URL"
+	echo "4) Misc"
+	echo "q) Quit"
+	read -p "Please enter your selection: " selection
+	case $selection in
+		1 ) keyset;;
+		2 ) finishset;;
+		3 ) shortenset;;
+		4 ) misc;;
+		q ) exit 0;;
+		* ) echo "Invalid selection. Please choose 1, 2, 3, or 4."; settings;;
+	esac
+}
+
+
 function shorten() {
 	check_key
 
@@ -102,10 +197,12 @@ function shorten() {
 	#Check if the URL entered is valid.
 	regex='(https?|ftp|file)://[-A-Za-z0-9\+&@#/%?=~_|!:,.;]*[-A-Za-z0-9\+&@#/%=~_|]'
 	if [[ $url =~ $regex ]]; then
-		result=$(curl -s "https://api.awau.moe/shorten/polr?action=shorten&key=$key&url=$url")
+		result=$(curl -s "https://api.awau.moe/shorten/polr?action=shorten&key=$key&url=$url" -H "User-Agent: WhatsThisClient (https://github.com/whats-this/owo.sh, v0.0.19)")
 
 		#Check if the URL got sucessfully shortened.
 		if grep -q "https://" <<< "${result}"; then
+			code=$(echo $result | sed 's/.*oe//')
+			result="https://$shorten_url$code"
 			d=$1
 			if [ "$d" = "true" ]; then
 					clipboard $result
@@ -142,7 +239,7 @@ function screenshot() {
 
 	# Open our new entry to use it!
 	entry=$path$filename
-	upload=$(curl -s -F "files[]=@"$entry";type=image/png" https://api.awau.moe/upload/pomf?key="$key")
+	upload=$(curl -s -F "files[]=@"$entry";type=image/png" https://api.awau.moe/upload/pomf?key="$key"  -H "User-Agent: WhatsThisClient (https://github.com/whats-this/owo.sh, v0.0.19)")
 
 	if [ "$print_debug" = true ] ; then
 		echo $upload
@@ -188,7 +285,7 @@ function upload() {
 
 		filesize=$(wc -c <"$entry")
 		if [[ $filesize -le 83886081 ]]; then
-			upload=$(curl -s -F "files[]=@"$entry";type=$mimetype" https://api.awau.moe/upload/pomf?key="$key")
+			upload=$(curl -s -F "files[]=@"$entry";type=$mimetype" https://api.awau.moe/upload/pomf?key="$key" -H "User-Agent: WhatsThisClient (https://github.com/whats-this/owo.sh, v0.0.19)")
 			item="$(egrep -o '"url":\s*"[^"]+"' <<<"${upload}" | cut -d "\"" -f 4)"
 		else
 			echo "ERROR : File size too large or another error occured!"
@@ -241,6 +338,7 @@ if [ "${1}" = "-h" ] || [ "${1}" = "--help" ] || [ "${1}" = "" ]; then
 	echo "   -s --screenshot            Begins the screenshot uploading process."
 	echo "   -sl                        Takes a screenshot and shortens the URL."
 	echo "   -ul                        Uploads file and shortens URL."
+	echo "   --settings                 Opens settings page for OwO.sh"
 	echo ""
 	exit 0
 fi
@@ -306,6 +404,11 @@ fi
 exit 0
 fi
 
+##################################
+if [ "${1}" = "--settings" ]; then
+	settings
+	exit 0
+fi
 ##################################
 
 if [ "${1}" = "-l" ] || [ "${1}" = "--shorten" ]; then

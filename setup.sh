@@ -8,7 +8,7 @@
 #                            | |
 #                            |_|
 #
-# OWOUPLOADER.SH SCRIPT.
+# OWO.SH SCRIPT.
 # ----------------------
 #
 # This script is designed for you to be able to run the
@@ -37,17 +37,23 @@ fi
 scriptdir=$(dirname $(which $0))
 owodir="$HOME/.config/owo"
 
+if [ -d $owodir ]; then
+	cp $owodir/conf.cfg $owodir/conf.cfg.bak
+fi
+
 if [ ! -d $owodir ]; then
 	mkdir $owodir
-	cp -r $scriptdir/* $owodir
 fi
+
+cp -r $scriptdir/* $owodir
 
 # Give directory ownership to the actual user
 chown -R $(whoami | awk '{print $1}') $owodir
 
 # Create a symbolic link to /usr/local/bin
-sudo ln -s $owodir/script.sh /usr/local/bin/owo
-
+if [ ! -f /usr/local/bin/owo ]; then
+  sudo ln -s $owodir/script.sh /usr/local/bin/owo
+fi
 function is_mac() {
 	uname | grep -q "Darwin"
 }
