@@ -197,7 +197,7 @@ function shorten() {
 	#Check if the URL entered is valid.
 	regex='(https?|ftp|file)://[-A-Za-z0-9\+&@#/%?=~_|!:,.;]*[-A-Za-z0-9\+&@#/%=~_|]'
 	if [[ $url =~ $regex ]]; then
-		result=$(curl -s "https://api.awau.moe/shorten/polr?action=shorten&key=$key&url=$url")
+		result=$(curl -s "https://api.awau.moe/shorten/polr?action=shorten&key=$key&url=$url" -H "User-Agent: WhatsThisClient (https://github.com/whats-this/owo.sh, v0.0.19)")
 
 		#Check if the URL got sucessfully shortened.
 		if grep -q "https://" <<< "${result}"; then
@@ -239,7 +239,7 @@ function screenshot() {
 
 	# Open our new entry to use it!
 	entry=$path$filename
-	upload=$(curl -s -F "files[]=@"$entry";type=image/png" https://api.awau.moe/upload/pomf?key="$key")
+	upload=$(curl -s -F "files[]=@"$entry";type=image/png" https://api.awau.moe/upload/pomf?key="$key"  -H "User-Agent: WhatsThisClient (https://github.com/whats-this/owo.sh, v0.0.19)")
 
 	if [ "$print_debug" = true ] ; then
 		echo $upload
@@ -285,7 +285,7 @@ function upload() {
 
 		filesize=$(wc -c <"$entry")
 		if [[ $filesize -le 83886081 ]]; then
-			upload=$(curl -s -F "files[]=@"$entry";type=$mimetype" https://api.awau.moe/upload/pomf?key="$key")
+			upload=$(curl -s -F "files[]=@"$entry";type=$mimetype" https://api.awau.moe/upload/pomf?key="$key" -H "User-Agent: WhatsThisClient (https://github.com/whats-this/owo.sh, v0.0.19)")
 			item="$(egrep -o '"url":\s*"[^"]+"' <<<"${upload}" | cut -d "\"" -f 4)"
 		else
 			echo "ERROR : File size too large or another error occured!"
