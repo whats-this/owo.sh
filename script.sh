@@ -386,6 +386,8 @@ if [ "${1}" = "-h" ] || [ "${1}" = "--help" ] || [ "${1}" = "" ]; then
 	echo "   -s --screenshot            Begins the screenshot uploading process."
 	echo "   -sl                        Takes a screenshot and shortens the URL."
 	echo "   -ul                        Uploads file and shortens URL."
+	echo "   -gr                        Starts the gif uploading process."
+	echo "   -gs                        Stops the gif uploader."
 	echo "   --settings                 Opens settings page for OwO.sh"
 	echo ""
 	exit 0
