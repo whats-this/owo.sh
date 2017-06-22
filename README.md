@@ -39,11 +39,18 @@ However the following flags can be placed after `owo` for the each of the result
 | short | command          	| description                                                                                        |
 | ----- |------------------	|--------------------------------------------------------------------------------------------------  |
 | -h    | --help           	| Shows this help screen to you, displaying all the avaliable commands.             	             |
-| -v    | --version        	| Show current application version, incase you wanted to reference it elsewhere.        	         |
+| -v    | --version        	| Show current application version, incase you wanted to reference it elsewhere.        	     |
 | -c    | --check          	| Checks whether or not dependencies are installed. Response with a `INFO  : ` or and `ERROR : `.    |
 |       | --update         	| Checks whether or not your application is completely up to date. If not it will alert you.         |
 | -l    | --shorten        	| Begins the url shortening process. This can be done through application or another argument.       |
 | -s    | --screenshot     	| Begins the screenshot uploading process. Your OS should be able to guide you through this however. |
+| -gr   |                       | Begins screencast (gif) recording process. At this time, this feature is only available on Linux   |
+| -gs   |                       | Stops the screencast (gif) recording process and starts encoding/uploading.                        |
+
+#### Screencast capture requirements
+* ffmpeg (build > 2013)
+* slop (should come with maim)
+* If using compton, `xr_glx_hybrid` or `xrender` backend (`glx` causes flicker/tearing)
 
 ## Using the Mac Workflow
 
