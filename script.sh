@@ -330,47 +330,47 @@ function runupdate() {
 
 function screenrecord() {
 
-		if [ "$1" == "stop" ]; then
-    	if [ ! -f ~/.config/owo/gif.pid ]; then
-				echo "Pidfile doesn't exist, exiting..."
-				exit 1
-    	fi
-			echo "Stopping gif recorder..."
-    	kill -INT $(cat ~/.config/owo/gif.pid)
-    	exit 0
-		elif [ "$1" == "clean" ]; then
-    	rm ~/.config/owo/gif.pid
-    	exit 0
-		elif [ "$1" != "rec" ]; then
-    	echo "Unknown subcommand $1. Try \"rec\", \"stop\" or \"clean\""
-    	exit 1
-		elif [ -f ~/.config/owo/gif.pid ]; then
-    	echo "Pidfile exists, exiting..."
-    	exit 1
-		fi
-		TMP_AVI=$(mktemp /tmp/outXXXXXXXXXX.avi)
-		TMP_PALETTE=$(mktemp /tmp/outXXXXXXXXXX.png)
-		TMP_GIF=$(mktemp /tmp/outXXXXXXXXXX.gif)
-		function cleanup() {
-    	rm ~/.config/owo/gif.pid
-    	rm $TMP_AVI
-    	rm $TMP_PALETTE
-    	rm $TMP_GIF
-		}
-		trap cleanup EXIT
+   if [ "$1" == "stop" ]; then
+      if [ ! -f ~/.config/owo/gif.pid ]; then
+	 echo "Pidfile doesn't exist, exiting..."
+	 exit 1
+      fi
+      echo "Stopping gif recorder..."
+      kill -INT $(cat ~/.config/owo/gif.pid)
+      exit 0
+   elif [ "$1" == "clean" ]; then
+      rm ~/.config/owo/gif.pid
+      exit 0
+   elif [ "$1" != "rec" ]; then
+      echo "Unknown subcommand $1. Try \"rec\", \"stop\" or \"clean\""
+      exit 1
+   elif [ -f ~/.config/owo/gif.pid ]; then
+      echo "Pidfile exists, exiting..."
+      exit 1
+   fi
+   TMP_AVI=$(mktemp /tmp/outXXXXXXXXXX.avi)
+   TMP_PALETTE=$(mktemp /tmp/outXXXXXXXXXX.png)
+   TMP_GIF=$(mktemp /tmp/outXXXXXXXXXX.gif)
+   function cleanup() {
+      rm ~/.config/owo/gif.pid
+      rm $TMP_AVI
+      rm $TMP_PALETTE
+      rm $TMP_GIF
+   }
+   trap cleanup EXIT
 
-		touch ~/.config/owo/gif.pid
-		eval $(ffcast -s echo _s=%s _D=%D _c=%c)
-		ffmpeg -loglevel warning -y -f x11grab -show_region 1 -framerate 15 \
-    	-video_size $_s -i $_D+$_c -codec:v huffyuv   \
-    	-vf crop="iw-mod(iw\\,2):ih-mod(ih\\,2)" $TMP_AVI &
-			PID=$!
-			echo $PID > ~/.config/owo/gif.pid &
-			wait $PID
-			# TODO webm
-			# ffmpeg -y -loglevel warning -i $TMP_AVI -c:v libvpx -b:v 1M -c:a libvorbis $TMP_GIF
-			ffmpeg -v warning -i $TMP_AVI -vf "fps=15,palettegen=stats_mode=full" -y $TMP_PALETTE
-			ffmpeg -v warning -i $TMP_AVI -i $TMP_PALETTE -lavfi "fps=15 [x]; [x][1:v] paletteuse=dither=sierra2_4a" -y $TMP_GIF
+   touch ~/.config/owo/gif.pid
+   eval $(ffcast -s echo _s=%s _D=%D _c=%c)
+   ffmpeg -loglevel warning -y -f x11grab -show_region 1 -framerate 15 \
+      -video_size $_s -i $_D+$_c -codec:v huffyuv   \
+      -vf crop="iw-mod(iw\\,2):ih-mod(ih\\,2)" $TMP_AVI &
+   PID=$!
+   echo $PID > ~/.config/owo/gif.pid &
+   wait $PID
+   # TODO webm
+   # ffmpeg -y -loglevel warning -i $TMP_AVI -c:v libvpx -b:v 1M -c:a libvorbis $TMP_GIF
+   ffmpeg -v warning -i $TMP_AVI -vf "fps=15,palettegen=stats_mode=full" -y $TMP_PALETTE
+   ffmpeg -v warning -i $TMP_AVI -i $TMP_PALETTE -lavfi "fps=15 [x]; [x][1:v] paletteuse=dither=sierra2_4a" -y $TMP_GIF
    upload $TMP_GIF true
 }
 ##################################
