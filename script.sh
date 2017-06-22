@@ -195,7 +195,7 @@ function shorten() {
 	fi
 	#Check if the URL entered is valid.
 	regex='(https?|ftp|file)://[-A-Za-z0-9\+&@#/%?=~_|!:,.;]*[-A-Za-z0-9\+&@#/%=~_|]'
-	if [[ "$url" =~ "$regex" ]]; then
+	if [[ "$url" =~ $regex ]]; then
 		result=$(curl -s "https://api.awau.moe/shorten/polr?action=shorten&key=$key&url=$url" -H "User-Agent: WhatsThisClient (https://github.com/whats-this/owo.sh, v0.0.19)")
 
 		#Check if the URL got sucessfully shortened.
@@ -241,7 +241,7 @@ function screenshot() {
 	upload=$(curl -s -F "files[]=@"$entry";type=image/png" https://api.awau.moe/upload/pomf?key="$key"  -H "User-Agent: WhatsThisClient (https://github.com/whats-this/owo.sh, v0.0.19)")
 
 	if [ "$print_debug" = true ] ; then
-		echo $uploadhttps://owo.whats-th.is/4d4047.gifhttps://owo.whats-th.is/4d4047.gif
+		echo $upload
 	fi
 
 	if grep -E -q '"success":\s*true' <<< "${upload}"; then
