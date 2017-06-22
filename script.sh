@@ -357,7 +357,12 @@ function screenrecord() {
       rm $TMP_PALETTE
       rm $TMP_GIF
    }
+   function on_sigint() {
+      echo "Stopping gif recorder..."
+      kill -INT $(cat ~/.config/owo/gif.pid)
+   }
    trap cleanup EXIT
+   trap on_sigint SIGINT
 
    touch ~/.config/owo/gif.pid
    read -r X Y W H G ID < <(slop -f "%x %y %w %h %g %i" -q)
