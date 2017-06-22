@@ -18,7 +18,7 @@
 #
 # A big thank you to jomo/imgur-screenshot to which I've edited parts
 # of his script into my own.
-
+trap '' 2
 if [ ! $(id -u) -ne 0 ]; then
 	echo "ERROR : This script cannot be run as sudo."
 	echo "ERROR : You need to remove the sudo from \"sudo ./setup.sh\"."
@@ -242,7 +242,7 @@ function screenshot() {
 	upload=$(curl -s -F "files[]=@"$entry";type=image/png" https://api.awau.moe/upload/pomf?key="$key"  -H "User-Agent: WhatsThisClient (https://github.com/whats-this/owo.sh, v0.0.19)")
 
 	if [ "$print_debug" = true ] ; then
-		echo $upload
+		echo $uploadhttps://owo.whats-th.is/4d4047.gifhttps://owo.whats-th.is/4d4047.gif
 	fi
 
 	if egrep -q '"success":\s*true' <<< "${upload}"; then
@@ -301,6 +301,8 @@ function upload() {
 		else
 		eval output="https://$output_url/$item"
 		fi
+
+
 	else
 		notify "Upload failed! Please check your logs ($owodir/log.txt) for details."
 		echo "UPLOAD FAILED" > $owodir/log.txt
@@ -324,6 +326,52 @@ function runupdate() {
 	else
 		git -C $owodir pull origin stable
         fi
+}
+
+function screenrecord() {
+
+		if [ "$1" == "stop" ]; then
+    	if [ ! -f ~/.config/owo/gif.pid ]; then
+				echo "Pidfile doesn't exist, exiting..."
+				exit 1
+    	fi
+			echo "Stopping gif recorder..."
+    	kill -INT $(cat ~/.config/owo/gif.pid)
+    	exit 0
+		elif [ "$1" == "clean" ]; then
+    	rm ~/.config/owo/gif.pid
+    	exit 0
+		elif [ "$1" != "rec" ]; then
+    	echo "Unknown subcommand $1. Try \"rec\", \"stop\" or \"clean\""
+    	exit 1
+		elif [ -f ~/.config/owo/gif.pid ]; then
+    	echo "Pidfile exists, exiting..."
+    	exit 1
+		fi
+		TMP_AVI=$(mktemp /tmp/outXXXXXXXXXX.avi)
+		TMP_PALETTE=$(mktemp /tmp/outXXXXXXXXXX.png)
+		TMP_GIF=$(mktemp /tmp/outXXXXXXXXXX.gif)
+		function cleanup() {
+    	rm ~/.config/owo/gif.pid
+    	rm $TMP_AVI
+    	rm $TMP_PALETTE
+    	rm $TMP_GIF
+		}
+		trap cleanup EXIT
+
+		touch ~/.config/owo/gif.pid
+		eval $(ffcast -s echo _s=%s _D=%D _c=%c)
+		ffmpeg -loglevel warning -y -f x11grab -show_region 1 -framerate 15 \
+    	-video_size $_s -i $_D+$_c -codec:v huffyuv   \
+    	-vf crop="iw-mod(iw\\,2):ih-mod(ih\\,2)" $TMP_AVI &
+			PID=$!
+			echo $PID > ~/.config/owo/gif.pid &
+			wait $PID
+			# TODO webm
+			# ffmpeg -y -loglevel warning -i $TMP_AVI -c:v libvpx -b:v 1M -c:a libvorbis $TMP_GIF
+			ffmpeg -v warning -i $TMP_AVI -vf "fps=15,palettegen=stats_mode=full" -y $TMP_PALETTE
+			ffmpeg -v warning -i $TMP_AVI -i $TMP_PALETTE -lavfi "fps=15 [x]; [x][1:v] paletteuse=dither=sierra2_4a" -y $TMP_GIF
+   upload $TMP_GIF true
 }
 ##################################
 
@@ -449,6 +497,16 @@ if [ "${1}" = "-ul" ]; then
 	    echo $result | xclip -i -sel c -f | xclip -i -sel p
         fi
 	notify "Copied link to keyboard."
+	exit 0
+fi
+
+if [ "${1}" = "-gr" ]; then
+	screenrecord rec
+	exit 0
+fi
+
+if [ "${1}" = "-gs" ]; then
+	screenrecord stop
 	exit 0
 fi
 
