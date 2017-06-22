@@ -1,8 +1,4 @@
 #!/bin/bash
-if [[ $(lsb_release -a) == *"Ubuntu"* ]]; then
-  echo "lol fuck you"
-  exit 1337
-fi
 #                                   _                 _
 #                                  | |               | |
 #   _____      _____    _   _ _ __ | | ___   __ _  __| | ___ _ __
