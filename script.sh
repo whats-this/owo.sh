@@ -360,9 +360,13 @@ function screenrecord() {
    trap cleanup EXIT
 
    touch ~/.config/owo/gif.pid
-   eval $(ffcast -s echo _s=%s _D=%D _c=%c)
+   read -r X Y W H G ID < <(slop -f "%x %y %w %h %g %i" -q)
+   if [ -z $X ]; then
+      echo "Cancelled..."
+      exit 1
+   fi
    ffmpeg -loglevel warning -y -f x11grab -show_region 1 -framerate 15 \
-      -video_size $_s -i $_D+$_c -codec:v huffyuv   \
+      -s "$W"x"$H" -i :0.0+$X,$Y -codec:v huffyuv   \
       -vf crop="iw-mod(iw\\,2):ih-mod(ih\\,2)" $TMP_AVI &
    PID=$!
    echo $PID > ~/.config/owo/gif.pid &
