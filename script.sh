@@ -35,9 +35,6 @@ if [ ! -d "$owodir" ]; then
 	exit 1
 fi
 
-if [ ! -d "$path" ]; then
-	mkdir -p $path
-fi
 source "$owodir"/conf.cfg
 
 key="$userkey" >&2
