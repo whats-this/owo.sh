@@ -5,3 +5,7 @@ addons:
     - debian-sid    # Grab ShellCheck from the Debian repo
     packages:
     - shellcheck
+script:
+  - bash setup.sh
+  - owo script.sh
+  
