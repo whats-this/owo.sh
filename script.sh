@@ -41,8 +41,8 @@ key="$userkey" >&2
 
 # Split URLs by ;
 IFS=';' read -ra output_urls <<< "$finished_url" >&2
-if [ ${#output_urls[@]} -eq 0 ]; then
-	output_url=""
+if [ ${#output_urls[@]} -le 1 ]; then
+	output_url="$shorten_url" >&2
 else
 	output_url="${output_urls[$RANDOM % ${#output_urls[@]} ]}"
 fi
@@ -54,8 +54,8 @@ no_notify="$no_notify" >&2
 print_debug="$debug" >&2
 
 IFS=';' read -ra shorten_urls <<< "$shorten_url" >&2
-if [ ${#shorten_urls[@]} -eq 0 ]; then
-	shorten_url=""
+if [ ${#shorten_urls[@]} -le 1 ]; then
+	shorten_url="$shorten_url" >&2
 else
 	shorten_url="${shorten_urls[$RANDOM % ${shorten_urls[@]} ]}"
 fi
