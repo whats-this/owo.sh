@@ -42,7 +42,7 @@ key="$userkey" >&2
 # Split URLs by ;
 IFS=';' read -ra output_urls <<< "$finished_url" >&2
 if [ ${#output_urls[@]} -le 1 ]; then
-	output_url="$shorten_url" >&2
+	output_url="$finished_url" >&2
 else
 	output_url="${output_urls[$RANDOM % ${#output_urls[@]} ]}"
 fi
