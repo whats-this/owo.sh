@@ -38,14 +38,27 @@ fi
 source "$owodir"/conf.cfg
 
 key="$userkey" >&2
-output_url="$finished_url" >&2
+
+# Split URLs by ;
+IFS=';' read -ra output_urls <<< "$finished_url" >&2
+if [ ${#output_urls[@]} -le 1 ]; then
+	output_url="$finished_url" >&2
+else
+	output_url="${output_urls[$RANDOM % ${#output_urls[@]} ]}"
+fi
 
 directoryname="$scr_directory" >&2
 filename="$scr_filename" >&2
 path="$scr_path" >&2
 no_notify="$no_notify" >&2
 print_debug="$debug" >&2
-shorten_url="$shorten_url" >&2
+
+IFS=';' read -ra shorten_urls <<< "$shorten_url" >&2
+if [ ${#shorten_urls[@]} -le 1 ]; then
+	shorten_url="$shorten_url" >&2
+else
+	shorten_url="${shorten_urls[$RANDOM % ${shorten_urls[@]} ]}"
+fi
 ##################################
 
 function is_mac() {
@@ -93,22 +106,22 @@ function keyset() {
 }
 
 function finishset() {
-	read -p "Please enter your preferred URL for upload/screenshot: " finishstring
+	read -p "Please enter your preferred URLs for upload/screenshot (separated by semicolons ';'): " finishstring
 	if [ "$finishstring" = "q" ]; then
 		settings
 	fi
-	sed -i /finished_url=/c\finished_url="$finishstring" "$owodir"/conf.cfg
+	sed -i /finished_url=/c\finished_url="\"$finishstring\"" "$owodir"/conf.cfg
 	echo "Saved."
 	echo ""
 	settings
 }
 
 function shortenset() {
-	read -p "Please enter your preferred URL for shortening: " shortenstring
-	if [ "$finishstring" = "q" ]; then
+	read -p "Please enter your preferred URLs for shortening (separated by semicolons ';'): " shortenstring
+	if [ "$shortenstring" = "q" ]; then
 		settings
 	fi
-	sed -i /shorten_url=/c\shorten_url="$shortenstring" "$owodir"/conf.cfg
+	sed -i /shorten_url=/c\shorten_url="\"$shortenstring\"" "$owodir"/conf.cfg
 	echo "Saved."
 	echo ""
 	settings
@@ -287,6 +300,7 @@ function upload() {
 			echo "ERROR : File size too large or another error occured!"
 			exit 1
 		fi
+
 
 	if grep -E -q '"success":\s*true' <<< "${upload}"; then
 		d="$2"
