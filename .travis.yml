@@ -1,12 +1,11 @@
-sudo: required
-language: generic
-
-services:
-  - docker
-
+language: bash
+addons:
+  apt:
+    sources:
+    - debian-sid    # Grab ShellCheck from the Debian repo
+    packages:
+    - shellcheck
 script:
-  - wget -O- http://travis.debian.net/script.sh | sh -
-
-branches:
-  except:
-    - /^debian\/\d/
+  - bash setup.sh
+  - bash script.sh script.sh
+sudo: required

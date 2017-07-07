@@ -42,7 +42,7 @@ if [ -d $owodir ]; then
 fi
 
 if [ ! -d $owodir ]; then
-	mkdir $owodir
+	mkdir -p $owodir
 fi
 
 cp -r $scriptdir/* $owodir
