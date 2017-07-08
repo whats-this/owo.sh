@@ -16,12 +16,6 @@
 # client and for it to work.
 
 
-echo "pwd: `pwd`"
-echo "\$0: $0"
-echo "basename: `basename $0`"
-echo "dirname: `dirname $0`"
-echo "dirname/readlink: $(dirname $(readlink -f $0))"
-
 ##################################
 if [ ! $(id -u) -ne 0 ]; then
  	echo "ERROR : This script cannot be run as sudo."
@@ -41,7 +35,7 @@ fi
 
 ##################################
 
-scriptdir=$PWD
+scriptdir=$(dirname $(readlink -f $0))
 owodir="$HOME/.config/owo"
 
 if [ -d $owodir ]; then
