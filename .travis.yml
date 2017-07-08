@@ -5,6 +5,10 @@ addons:
     - debian-sid    # Grab ShellCheck from the Debian repo
     packages:
     - shellcheck
+    - maim
+    - slop
+    - xclip
+    - libnotify-bin
 script:
   - bash setup.sh
   - sed -i /userkey=/c\userkey="$key" $HOME/.config/owo/conf.cfg
