@@ -1,8 +1,8 @@
 dist: trusty
-
 group: edge
 language: bash
 addons:
+  apt:
     packages:
     - shellcheck
     - maim
