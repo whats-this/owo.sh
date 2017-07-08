@@ -57,7 +57,7 @@ IFS=';' read -ra shorten_urls <<< "$shorten_url" >&2
 if [ ${#shorten_urls[@]} -le 1 ]; then
 	shorten_url="$shorten_url" >&2
 else
-	shorten_url="${shorten_urls[$RANDOM % ${shorten_urls[@]} ]}"
+	shorten_url="${shorten_urls[$RANDOM % ${#shorten_urls[@]} ]}"
 fi
 ##################################
 
