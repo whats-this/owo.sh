@@ -186,7 +186,7 @@ function settings() {
 		2 ) finishset;;
 		3 ) shortenset;;
 		4 ) misc;;
-		q ) exit 0;;
+		q ) clear; exit 0;;
 		* ) echo "Invalid selection. Please choose 1, 2, 3, or 4."; settings;;
 	esac
 }
