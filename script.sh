@@ -268,7 +268,7 @@ function screenshot() {
 		else
 			output="https://$output_url/$item"
 		fi
-                echo "$(date): https://$output_url/$item" >> screenshot.log
+                echo "$(date): https://$output_url/$item" >> $owodir/screenshot.log
 	else
 		notify "Upload failed! Please check your logs ("$owodir"/log.txt) for details."
 		echo "UPLOAD FAILED" > "$owodir"/log.txt
@@ -307,7 +307,7 @@ function upload() {
 		if [ "$d" = true ]; then
 				clipboard "https://$output_url/$item"
 			echo "https://$output_url/$item"
-                echo "$(date): https://$output_url/$item" >> upload.log
+                echo "$(date): https://$output_url/$item" >> $owodir/upload.log
 		else
 		eval output="https://$output_url/$item"
 		fi
