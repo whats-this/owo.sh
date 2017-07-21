@@ -76,7 +76,7 @@ function check_key() {
 function notify() {
     if [ "$no_notify" == "false" ]; then
 	if is_mac; then
-		/usr/local/bin/terminal-notifier -title owo.whats-th.is -message "${1}" -appIcon $owodir/icon.icns
+		/usr/local/bin/terminal-notifier -title owo.whats-th.is -message "${1}" -appIcon $owodir/icon.icns -timeout 5
 	else
 		notify-send owo.whats-th.is "${1}" -i "$owodir"/icon.png
 	fi
