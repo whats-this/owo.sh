@@ -35,7 +35,7 @@ fi
 
 ##################################
 
-scriptdir=$(dirname $(readlink -f $0))
+scriptdir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 owodir="$HOME/.config/owo"
 
 if [ -d $owodir ]; then
