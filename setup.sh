@@ -65,10 +65,10 @@ if is_mac; then
 	echo "INFO  : Dependencies are unavaliable for Mac."
 	echo "INFO  : Please run \"owo --check\" to check later on."
 else
-	(which notify-send &>/dev/null && echo "FOUND : found notify-send") || echo "Notify-send not found. Please install it via your package manager." && exit 1
-	(which maim &>/dev/null && echo "FOUND : found maim") || echo "Maim not found. Please install it via your package manager." && exit 1
-	(which xclip &>/dev/null && echo "FOUND : found xclip") || echo "Xclip not found. Please install it via your package manager." && exit 1
-	(which slop &>/dev/null && echo "FOUND : found scrot") || echo "Slop not found. Please install via your package manager." && exit 1
+	(which notify-send &>/dev/null && echo "FOUND : found notify-send") || { echo "Notify-send not found. Please install it via your package manager."; exit 1; }
+	(which maim &>/dev/null && echo "FOUND : found maim") || { echo "Maim not found. Please install it via your package manager."; exit 1; }
+	(which xclip &>/dev/null && echo "FOUND : found xclip") || { echo "Xclip not found. Please install it via your package manager."; exit 1; }
+	(which slop &>/dev/null && echo "FOUND : found scrot") || { echo "Slop not found. Please install via your package manager."; exit 1; }
 fi
 
 # Tell the user its done!
