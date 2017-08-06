@@ -248,7 +248,7 @@ function screenshot() {
 
 	# Open our new entry to use it!
 	entry="$path$filename"
-	upload=$(curl -s -F "files[]=@"$entry";type=image/png" https://api.awau.moe/upload/pomf?key="$key"  -H "User-Agent: WhatsThisClient (https://github.com/whats-this/owo.sh, v0.0.19)")
+	upload=$(curl -s -F "files[]=@$entry;type=image/png" https://api.awau.moe/upload/pomf?key="$key"  -H "User-Agent: WhatsThisClient (https://github.com/whats-this/owo.sh, v0.0.19)")
 
 	if [ "$print_debug" = true ] ; then
 		echo $upload
@@ -294,7 +294,7 @@ function upload() {
 
 		filesize=$(wc -c <"$entry")
 		if [[ "$filesize" -le 83886081 ]]; then
-			upload=$(curl -s -F "files[]=@"$entry";type=$mimetype" https://api.awau.moe/upload/pomf?key="$key" -H "User-Agent: WhatsThisClient (https://github.com/whats-this/owo.sh, v0.0.19)")
+			upload=$(curl -s -F "files[]=@$entry;type=$mimetype" https://api.awau.moe/upload/pomf?key="$key" -H "User-Agent: WhatsThisClient (https://github.com/whats-this/owo.sh, v0.0.19)")
 			item="$(grep -E -o '"url":\s*"[^"]+"' <<<"${upload}" | cut -d "\"" -f 4)"
 		else
 			echo "ERROR : File size too large or another error occured!"
