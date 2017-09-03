@@ -24,7 +24,8 @@ Thank you to [jomo](https://github.com/jomo/) and his script [jomo/imgur-screens
 
 1. Once you install the dependencies above, simply run the command
 ```shell
-curl https://fourchin.net/owo.sh | bash
+
+curl -L https://owo.sh | bash
 ```
 in your terminal.
 ## Usage
