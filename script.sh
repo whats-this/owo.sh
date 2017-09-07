@@ -325,7 +325,7 @@ function upload() {
 }
 
 function runupdate() {
-	curl "https://fourchin.net/owo.sh" | bash
+	curl -L "https://owo.sh" | bash
 }
 
 function screenrecord() {
