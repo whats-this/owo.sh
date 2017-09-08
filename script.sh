@@ -206,7 +206,7 @@ function shorten() {
 	#Check if the URL entered is valid.
 	regex='(https?|ftp|file)://[-A-Za-z0-9\+&@#/%?=~_|!:,.;]*[-A-Za-z0-9\+&@#/%=~_|]'
 	if [[ "$url" =~ $regex ]]; then
-		result=$(curl -s "https://api.awau.moe/shorten/polr?action=shorten&key=$key&url=$url" -H "User-Agent: WhatsThisClient (https://github.com/whats-this/owo.sh, v0.0.19)")
+		result=$(curl -s -G "https://api.awau.moe/shorten/polr?action=shorten" --data-urlencode "key=$key" --data-urlencode "url=$url" -H "User-Agent: WhatsThisClient (https://github.com/whats-this/owo.sh, v0.0.19)")
 
 		#Check if the URL got sucessfully shortened.
 		if grep -q "https://" <<< "${result}"; then
@@ -282,7 +282,7 @@ function screenshot() {
 }
 
 function upload() {
-        	entry="$1"
+	        entry="$1"
 	if [ ! -f "$entry" ];
 	then
 		echo "$entry not found! Exiting..."
