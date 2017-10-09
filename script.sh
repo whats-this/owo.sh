@@ -238,7 +238,6 @@ function screenshot() {
 
 	# Begin our screen capture.
     if [[ $fullscreen == true ]]; then 
-        pathname="full_$pathname"
         if is_mac; then
             screencapture -o "$path$filename"
         else
