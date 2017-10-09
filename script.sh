@@ -237,11 +237,20 @@ function screenshot() {
 	notify "Select an area to begin the upload."
 
 	# Begin our screen capture.
-	if is_mac; then
-		screencapture -o -i "$path$filename"
-	else
-		maim -s "$path$filename"
-	fi
+    if [[ $fullscreen == true ]]; then 
+        pathname="full_$pathname"
+        if is_mac; then
+            screencapture -o "$path$filename"
+        else
+            maim "$path$filename"
+        fi
+    else
+        if is_mac; then
+            screencapture -o -i "$path$filename"
+        else
+            maim -s "$path$filename"
+        fi
+    fi
 
 	# Make a directory for our user if it doesnt already exsist.
 	mkdir -p "$path"
@@ -387,12 +396,13 @@ function screenrecord() {
 if [ "${1}" = "-h" ] || [ "${1}" = "--help" ] || [ "${1}" = "" ]; then
 	echo "usage: ${0} [-h | --check | -v]"
 	echo ""
-	echo "   -h --help                  Show this help screen to you."
-	echo "   -v --version               Show current application version."
-	echo "   -c --check                 Checks if dependencies are installed."
-	echo "      --update                Checks if theres an update available."
-	echo "   -l --shorten               Begins the url shortening process."
-	echo "   -s --screenshot            Begins the screenshot uploading process."
+	echo "   -h  --help                 Show this help screen to you."
+	echo "   -v  --version              Show current application version."
+	echo "   -c  --check                Checks if dependencies are installed."
+	echo "       --update               Checks if theres an update available."
+	echo "   -l  --shorten              Begins the url shortening process."
+	echo "   -s  --screenshot           Begins the screenshot uploading process."
+	echo "   -sf --fullscreen           Begins the fullscreen screenshot uploading process."
 	echo "   -sl                        Takes a screenshot and shortens the URL."
 	echo "   -ul                        Uploads file and shortens URL."
 	echo "   -gr                        Starts the gif uploading process."
@@ -478,6 +488,14 @@ fi
 ##################################
 
 if [ "${1}" = "-s" ] || [ "${1}" = "--screenshot" ]; then
+	screenshot true
+	exit 0
+fi
+
+##################################
+
+if [ "${1}" = "-sf" ] || [ "${1}" = "--fullscreen" ]; then
+    fullscreen=true
 	screenshot true
 	exit 0
 fi
