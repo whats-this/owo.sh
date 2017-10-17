@@ -241,13 +241,13 @@ function screenshot() {
         if is_mac; then
             screencapture -o "$path$filename"
         else
-            maim "$path$filename"
+            maim -u "$path$filename"
         fi
     else
         if is_mac; then
             screencapture -o -i "$path$filename"
         else
-            maim -s "$path$filename"
+            maim -su "$path$filename"
         fi
     fi
 
