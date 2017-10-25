@@ -180,8 +180,8 @@ function misc() {
 		2 ) scrsave_prefs;;
 		3 ) cursor_prefs;;
 		4 ) xclip_prefs;;
-		5 ) settings;;
-		* ) echo "Invalid selection. Please choose 1, 2 or 3, 4, or 5."; misc;;
+		q ) echo ""; settings;;
+		* ) echo "Invalid selection. Please choose 1, 2, 3, or 4."; misc;;
 	esac
 }
 
