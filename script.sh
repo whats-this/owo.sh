@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #                                   _                 _
 #                                  | |               | |
 #   _____      _____    _   _ _ __ | | ___   __ _  __| | ___ _ __
@@ -10,7 +10,6 @@
 #
 # OWO.SH SCRIPT.
 # ----------------------
-#
 # This script allows for native support to upload to the image server
 # and url shortener component of whats-th.is. Through this you can do
 # plethora of actions.
@@ -52,6 +51,7 @@ filename="$scr_filename" >&2
 path="$scr_path" >&2
 no_notify="$no_notify" >&2
 print_debug="$debug" >&2
+scr_cursor="$cap_cursor" >&2
 
 IFS=';' read -ra shorten_urls <<< "$shorten_url" >&2
 if [ ${#shorten_urls[@]} -le 1 ]; then
@@ -74,18 +74,18 @@ function check_key() {
 }
 
 function notify() {
-    if [ "$no_notify" == "false" ]; then
-	if is_mac; then
-		/usr/local/bin/terminal-notifier -title owo.whats-th.is -message "${1}" -appIcon $owodir/icon.icns -timeout 5
-	else
-		notify-send owo.whats-th.is "${1}" -i "$owodir"/icon.png
+	if [ "$no_notify" == "false" ]; then
+		if is_mac; then
+			/usr/local/bin/terminal-notifier -title owo.whats-th.is -message "${1}" -appIcon $owodir/icon.icns -timeout 5
+		else
+			notify-send owo.whats-th.is "${1}" -i "$owodir"/icon.png
+		fi
 	fi
-   fi
 }
 
 function delete_scr() {
 	if [ "$keep_scr" != "true" ]; then
-		rm "$path$filename"
+		rm "${path}${filename}"
 	fi
 }
 
@@ -131,7 +131,7 @@ function notif_prefs() {
 	read -p "Would you like to recieve notifications from OwO.sh? (y/n/q) " choice
 	case "$choice" in
 		y|Y ) sed -i /no_notify=/c\no_notify=false "$owodir"/conf.cfg; echo "Saved."; echo ""; misc;;
-	  n|N ) sed -i /no_notify=/c\no_notify=true "$owodir"/conf.cfg; echo "Saved."; echo ""; misc;;
+		n|N ) sed -i /no_notify=/c\no_notify=true "$owodir"/conf.cfg; echo "Saved."; echo ""; misc;;
 		q|Q ) echo ""; misc;;
 		* ) echo "Invalid selection. Please choose y or n.";;
 	esac
@@ -141,7 +141,17 @@ function scrsave_prefs() {
 	read -p "Would you like to save screenshots to your local? (y/n/q) " choice
 	case "$choice" in
 		y|Y ) sed -i /keep_scr=/c\keep_scr=true "$owodir"/conf.cfg; echo "Saved."; echo ""; misc;;
-	  n|N ) sed -i /keep_scr=/c\keep_scr=false "$owodir"/conf.cfg; echo "Saved."; echo ""; misc;;
+		n|N ) sed -i /keep_scr=/c\keep_scr=false "$owodir"/conf.cfg; echo "Saved."; echo ""; misc;;
+		q|Q ) echo ""; misc;;
+		* ) echo "Invalid selection. Please choose y or n.";;
+	esac
+}
+
+function cursor_prefs() {
+	read -p "Would you like to capture the cursor in screenshots? (y/n/q) " choice
+	case "$choice" in
+		y|Y ) sed -i /cap_cursor=/c\cap_cursor=true "$owodir"/conf.cfg; echo "Saved."; echo ""; misc;;
+		n|N ) sed -i /cap_cursor=/c\cap_cursor=false "$owodir"/conf.cfg; echo "Saved."; echo ""; misc;;
 		q|Q ) echo ""; misc;;
 		* ) echo "Invalid selection. Please choose y or n.";;
 	esac
@@ -161,15 +171,17 @@ function misc() {
 	echo "Miscellaneous Settings"
 	echo "1) Notification preferences"
 	echo "2) Screenshot saving preferences"
-	echo "3) Clipboard copying preferences"
-	echo "4) Go back"
+	echo "3) Screenshot cursor preferences"
+	echo "4) Clipboard copying preferences"
+	echo "q) Go back"
 	read -p "Please enter your selection: " selection
 	case "$selection" in
 		1 ) notif_prefs;;
 		2 ) scrsave_prefs;;
-		3 ) xclip_prefs;;
-		4 ) settings;;
-		* ) echo "Invalid selection. Please choose 1, 2 or 3."; misc;;
+		3 ) cursor_prefs;;
+		4 ) xclip_prefs;;
+		q ) echo ""; settings;;
+		* ) echo "Invalid selection. Please choose 1, 2, 3, or 4."; misc;;
 	esac
 }
 
@@ -214,19 +226,19 @@ function shorten() {
 			result="https://$shorten_url$code"
 			d="$1"
 			if [ "$d" = "true" ]; then
-					clipboard "$result"
-					echo "$result"
-					notify "Copied the link to the keyboard."
-                                        echo "$(date): $result" >> "$owodir"/shorten.log
+				clipboard "$result"
+				echo "$result"
+				notify "Copied the link to the keyboard."
+				echo "$(date): $result" >> "$owodir"/shorten.log
 			else
-					echo "$result"
+				echo "$result"
 			fi
 		else
 			notify "Shortening failed!"
 		fi
 	else
 		notify "URL is not valid!"
-                exit 4
+		exit 4
 	fi
 }
 
@@ -237,25 +249,30 @@ function screenshot() {
 	notify "Select an area to begin the upload."
 
 	# Begin our screen capture.
-    if [[ $fullscreen == true ]]; then 
-        if is_mac; then
-            screencapture -o "$path$filename"
-        else
-            maim "$path$filename"
-        fi
-    else
-        if is_mac; then
-            screencapture -o -i "$path$filename"
-        else
-            maim -s "$path$filename"
-        fi
-    fi
+	if [[ $fullscreen ]]; then 
+		if is_mac; then
+			screencapture -o "${path}${filename}"
+		elif [[ $scr_cursor ]]; then 
+			maim -u "${path}${filename}"
+		else
+			maim "${path}${filename}"
+		fi
+	else
+		if is_mac; then
+			screencapture -o -i "${path}${filename}"
+		elif [[ $scr_cursor ]]; then
+			maim -s -u "${path}${filename}"
+		else
+			maim -s "${path}${filename}"
+		fi
+	fi
+
 
 	# Make a directory for our user if it doesnt already exsist.
 	mkdir -p "$path"
 
 	# Open our new entry to use it!
-	entry="$path$filename"
+	entry="${path}${filename}"
 	upload=$(curl -s -F "files[]=@$entry;type=image/png" https://api.awau.moe/upload/pomf?key="$key"  -H "User-Agent: WhatsThisClient (https://github.com/whats-this/owo.sh, v0.0.19)")
 
 	if [ "$print_debug" = true ] ; then
@@ -269,14 +286,14 @@ function screenshot() {
 			if [ "$scr_copy" = true ]; then
 				clipboard "https://$output_url/$item"
 				notify "Upload complete! Copied the link to your clipboard."
-                                echo "https://$output_url/$item"
+				echo "https://$output_url/$item"
 			else
 				echo "https://$output_url/$item"
 			fi
 		else
 			output="https://$output_url/$item"
 		fi
-                echo "$(date): https://$output_url/$item" >> $owodir/screenshot.log
+		echo "$(date): https://$output_url/$item" >> $owodir/screenshot.log
 	else
 		notify "Upload failed! Please check your logs ("$owodir"/log.txt) for details."
 		echo "UPLOAD FAILED" > "$owodir"/log.txt
@@ -284,40 +301,40 @@ function screenshot() {
 		echo "--------------------------------------" >> "$owodir"/log.txt
 		echo " " >> "$owodir"/log.txt
 		echo "    " "$upload" >> "$owodir"/log.txt
-                exit 1
+		exit 1
 	fi
 	delete_scr
 }
 
 function upload() {
-	        entry="$1"
+	entry="$1"
 	if [ ! -f "$entry" ];
 	then
 		echo "$entry not found! Exiting..."
-        	exit 1
-        fi
+		exit 1
+	fi
 	check_key
 
 	mimetype=$(file -b --mime-type "$entry")
 
-		filesize=$(wc -c <"$entry")
-		if [[ "$filesize" -le 83886081 ]]; then
-			upload=$(curl -s -F "files[]=@$entry;type=$mimetype" https://api.awau.moe/upload/pomf?key="$key" -H "User-Agent: WhatsThisClient (https://github.com/whats-this/owo.sh, v0.0.19)")
-			item="$(grep -E -o '"url":\s*"[^"]+"' <<<"${upload}" | cut -d "\"" -f 4)"
-		else
-			echo "ERROR : File size too large or another error occured!"
-			exit 1
-		fi
+	filesize=$(wc -c <"$entry")
+	if [[ "$filesize" -le 83886081 ]]; then
+		upload=$(curl -s -F "files[]=@$entry;type=$mimetype" https://api.awau.moe/upload/pomf?key="$key" -H "User-Agent: WhatsThisClient (https://github.com/whats-this/owo.sh, v0.0.19)")
+		item="$(grep -E -o '"url":\s*"[^"]+"' <<<"${upload}" | cut -d "\"" -f 4)"
+	else
+		echo "ERROR : File size too large or another error occured!"
+		exit 1
+	fi
 
 
 	if grep -E -q '"success":\s*true' <<< "${upload}"; then
 		d="$2"
 		if [ "$d" = true ]; then
-				clipboard "https://$output_url/$item"
+			clipboard "https://$output_url/$item"
 			echo "https://$output_url/$item"
-                echo "$(date): https://$output_url/$item" >> $owodir/upload.log
+			echo "$(date): https://$output_url/$item" >> $owodir/upload.log
 		else
-		eval output="https://$output_url/$item"
+			eval output="https://$output_url/$item"
 		fi
 
 
@@ -328,7 +345,7 @@ function upload() {
 		echo "--------------------------------------" >> "$owodir"/log.txt
 		echo " " >> "$owodir"/log.txt
 		echo "    " "$upload" >> "$owodir"/log.txt
-                exit 1
+		exit 1
 	fi
 }
 
@@ -338,57 +355,57 @@ function runupdate() {
 
 function screenrecord() {
 
-   if [ "$1" == "stop" ]; then
-      if [ ! -f ~/.config/owo/gif.pid ]; then
-	 echo "Pidfile doesn't exist, exiting..."
-	 exit 1
-      fi
-      echo "Stopping gif recorder..."
-      kill -INT $(cat ~/.config/owo/gif.pid)
-      exit 0
-   elif [ "$1" == "clean" ]; then
-      rm ~/.config/owo/gif.pid
-      exit 0
-   elif [ "$1" != "rec" ]; then
-      echo "Unknown subcommand $1. Try \"rec\", \"stop\" or \"clean\""
-      exit 1
-   elif [ -f ~/.config/owo/gif.pid ]; then
-      echo "Pidfile exists, exiting..."
-      exit 1
-   fi
-   TMP_AVI=$(mktemp /tmp/outXXXXXXXXXX.avi)
-   TMP_PALETTE=$(mktemp /tmp/outXXXXXXXXXX.png)
-   TMP_GIF=$(mktemp /tmp/outXXXXXXXXXX.gif)
-   function cleanup() {
-      rm ~/.config/owo/gif.pid
-      rm "$TMP_AVI"
-      rm "$TMP_PALETTE"
-      rm "$TMP_GIF"
-   }
-   function on_sigint() {
-      echo "Stopping gif recorder..."
-      kill -INT $(cat "$owodir"/gif.pid)
-   }
-   trap cleanup EXIT
-   trap on_sigint SIGINT
+	if [ "$1" == "stop" ]; then
+		if [ ! -f ~/.config/owo/gif.pid ]; then
+			echo "Pidfile doesn't exist, exiting..."
+			exit 1
+		fi
+		echo "Stopping gif recorder..."
+		kill -INT $(cat ~/.config/owo/gif.pid)
+		exit 0
+	elif [ "$1" == "clean" ]; then
+		rm ~/.config/owo/gif.pid
+		exit 0
+	elif [ "$1" != "rec" ]; then
+		echo "Unknown subcommand $1. Try \"rec\", \"stop\" or \"clean\""
+		exit 1
+	elif [ -f ~/.config/owo/gif.pid ]; then
+		echo "Pidfile exists, exiting..."
+		exit 1
+	fi
+	TMP_AVI=$(mktemp /tmp/outXXXXXXXXXX.avi)
+	TMP_PALETTE=$(mktemp /tmp/outXXXXXXXXXX.png)
+	TMP_GIF=$(mktemp /tmp/outXXXXXXXXXX.gif)
+	function cleanup() {
+		rm ~/.config/owo/gif.pid
+		rm "$TMP_AVI"
+		rm "$TMP_PALETTE"
+		rm "$TMP_GIF"
+	}
+	function on_sigint() {
+		echo "Stopping gif recorder..."
+		kill -INT $(cat "$owodir"/gif.pid)
+	}
+	trap cleanup EXIT
+	trap on_sigint SIGINT
 
-   touch ~/.config/owo/gif.pid
-   read -r X Y W H G ID < <(slop -f "%x %y %w %h %g %i" -q)
-   if [ -z "$X" ]; then
-      echo "Cancelled..."
-      exit 1
-   fi
-   ffmpeg -loglevel warning -y -f x11grab -show_region 1 -framerate 15 \
-      -s "$W"x"$H" -i :0.0+"$X","$Y" -codec:v huffyuv   \
-      -vf crop="iw-mod(iw\\,2):ih-mod(ih\\,2)" "$TMP_AVI" &
-   PID="$!"
-   echo "$PID" > ~/.config/owo/gif.pid &
-   wait "$PID"
-   # TODO webm
-   # ffmpeg -y -loglevel warning -i $TMP_AVI -c:v libvpx -b:v 1M -c:a libvorbis $TMP_GIF
-   ffmpeg -v warning -i "$TMP_AVI" -vf "fps=15,palettegen=stats_mode=full" -y $TMP_PALETTE
-   ffmpeg -v warning -i "$TMP_AVI" -i "$TMP_PALETTE" -lavfi "fps=15 [x]; [x][1:v] paletteuse=dither=sierra2_4a" -y $TMP_GIF
-   upload "$TMP_GIF" true
+	touch ~/.config/owo/gif.pid
+	read -r X Y W H G ID < <(slop -f "%x %y %w %h %g %i" -q)
+	if [ -z "$X" ]; then
+		echo "Cancelled..."
+		exit 1
+	fi
+	ffmpeg -loglevel warning -y -f x11grab -show_region 1 -framerate 15 \
+		-s "$W"x"$H" -i :0.0+"$X","$Y" -codec:v huffyuv   \
+		-vf crop="iw-mod(iw\\,2):ih-mod(ih\\,2)" "$TMP_AVI" &
+	PID="$!"
+	echo "$PID" > ~/.config/owo/gif.pid &
+	wait "$PID"
+	# TODO webm
+	# ffmpeg -y -loglevel warning -i $TMP_AVI -c:v libvpx -b:v 1M -c:a libvorbis $TMP_GIF
+	ffmpeg -v warning -i "$TMP_AVI" -vf "fps=15,palettegen=stats_mode=full" -y $TMP_PALETTE
+	ffmpeg -v warning -i "$TMP_AVI" -i "$TMP_PALETTE" -lavfi "fps=15 [x]; [x][1:v] paletteuse=dither=sierra2_4a" -y $TMP_GIF
+	upload "$TMP_GIF" true
 }
 ##################################
 
@@ -453,23 +470,23 @@ if [ "${1}" = "--update" ]; then
 			read -p "INFO  : Continue anyway? (Y/N)" choice
 			case "$choice" in
 				y|Y ) runupdate;;
-n|N ) exit 0;;
-* ) echo "ERROR : That is an invalid response, (Y)es/(N)o.";;
-esac
+				n|N ) exit 0;;
+				* ) echo "ERROR : That is an invalid response, (Y)es/(N)o.";;
+			esac
 
 
-elif [ -z "${current_version}" ] || [ -z "${remote_version}" ]; then
-	echo "ERROR : Version string is invalid."
-	echo "INFO  : Current (local) version: '${current_version}'"
-	echo "INFO  : Latest (remote) version: '${remote_version}'"
-else
-	echo "INFO  : Version ${current_version} is up to date."
-fi
-else
-	echo "ERROR : Failed to check for latest version: ${remote_version}"
-fi
+		elif [ -z "${current_version}" ] || [ -z "${remote_version}" ]; then
+			echo "ERROR : Version string is invalid."
+			echo "INFO  : Current (local) version: '${current_version}'"
+			echo "INFO  : Latest (remote) version: '${remote_version}'"
+		else
+			echo "INFO  : Version ${current_version} is up to date."
+		fi
+	else
+		echo "ERROR : Failed to check for latest version: ${remote_version}"
+	fi
 
-exit 0
+	exit 0
 fi
 
 ##################################
@@ -494,7 +511,7 @@ fi
 ##################################
 
 if [ "${1}" = "-sf" ] || [ "${1}" = "--fullscreen" ]; then
-    fullscreen=true
+	fullscreen=true
 	screenshot true
 	exit 0
 fi
@@ -520,10 +537,10 @@ if [ "${1}" = "-ul" ]; then
 	echo "$result"
 
 	if is_mac; then
-	    echo "$result" | pbcopy
+		echo "$result" | pbcopy
 	else
-	    echo "$result" | xclip -i -sel c -f | xclip -i -sel p
-        fi
+		echo "$result" | xclip -i -sel c -f | xclip -i -sel p
+	fi
 	notify "Copied link to keyboard."
 	exit 0
 fi
