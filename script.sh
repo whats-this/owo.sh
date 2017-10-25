@@ -171,7 +171,7 @@ function misc() {
 	echo "Miscellaneous Settings"
 	echo "1) Notification preferences"
 	echo "2) Screenshot saving preferences"
-	echo "2) Screenshot cursor preferences"
+	echo "3) Screenshot cursor preferences"
 	echo "4) Clipboard copying preferences"
 	echo "5) Go back"
 	read -p "Please enter your selection: " selection
@@ -181,7 +181,7 @@ function misc() {
 		3 ) cursor_prefs;;
 		4 ) xclip_prefs;;
 		5 ) settings;;
-		* ) echo "Invalid selection. Please choose 1, 2 or 3."; misc;;
+		* ) echo "Invalid selection. Please choose 1, 2 or 3, 4, or 5."; misc;;
 	esac
 }
 
