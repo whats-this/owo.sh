@@ -519,7 +519,7 @@ fi
 ##################################
 
 if [ "${1}" = "-sf" ] || [ "${1}" = "--fullscreen" ]; then
-    fullscreen=true
+	fullscreen=true
 	screenshot true
 	exit 0
 fi
