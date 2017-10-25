@@ -173,7 +173,7 @@ function misc() {
 	echo "2) Screenshot saving preferences"
 	echo "3) Screenshot cursor preferences"
 	echo "4) Clipboard copying preferences"
-	echo "5) Go back"
+	echo "q) Go back"
 	read -p "Please enter your selection: " selection
 	case "$selection" in
 		1 ) notif_prefs;;
