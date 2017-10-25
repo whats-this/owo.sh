@@ -519,6 +519,14 @@ fi
 
 ##################################
 
+if [ "${1}" = "-sf" ] || [ "${1}" = "--fullscreen" ]; then
+    fullscreen=true
+	screenshot true
+	exit 0
+fi
+
+##################################
+
 if [ "${1}" = "-sl" ]; then
     screenshot false
     shorten true $output
