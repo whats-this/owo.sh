@@ -60,13 +60,6 @@ function is_mac() {
 }
 
 
-#!/bin/bash
-
-function is_mac() {
-	uname | grep -q "Darwin"
-}
-
-
 # Install dependencies
 
 dependencies=0
