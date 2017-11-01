@@ -253,7 +253,7 @@ function screenshot() {
 		if is_mac; then
 			screencapture -o "${path}${filename}"
 		elif [[ $scr_cursor ]]; then 
-			maim -u "${path}${filename}"
+			maim --hidecursor "${path}${filename}"
 		else
 			maim "${path}${filename}"
 		fi
@@ -261,7 +261,7 @@ function screenshot() {
 		if is_mac; then
 			screencapture -o -i "${path}${filename}"
 		elif [[ $scr_cursor ]]; then
-			maim -s -u "${path}${filename}"
+			maim -s --hidecursor "${path}${filename}"
 		else
 			maim -s "${path}${filename}"
 		fi
