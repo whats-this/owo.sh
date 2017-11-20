@@ -301,7 +301,7 @@ function screenshot() {
 		item="$(grep -E -o '"url":\s*"[^"]+"' <<<"${upload}" | cut -d "\"" -f 4)"
 		d="$1"
 		if [ "$d" = true ]; then
-			if [ "$scr_copy" = true ]; then
+			if [ "$url_copy" = true ]; then
 				clipboard "https://$output_url/$item"
 				notify "Upload complete! Copied the link to your clipboard."
 				echo "https://$output_url/$item"
@@ -348,7 +348,9 @@ function upload() {
 	if grep -E -q '"success":\s*true' <<< "${upload}"; then
 		d="$2"
 		if [ "$d" = true ]; then
-			clipboard "https://$output_url/$item"
+			if [ "$url_copy" = true ]; then
+				clipboard "https://$output_url/$item"
+			fi
 			echo "https://$output_url/$item"
 			echo "$(date): https://$output_url/$item" >> $owodir/upload.log
 		else
