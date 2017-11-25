@@ -49,6 +49,12 @@ fi
 directoryname="$scr_directory" >&2
 filename="$scr_filename" >&2
 path="$scr_path" >&2
+
+rec_directoryname="$rec_directory" >&2
+rec_filename="$rec_filename" >&2
+rec_path="$rec_path" >&2
+
+
 no_notify="$no_notify" >&2
 print_debug="$debug" >&2
 scr_cursor="$cap_cursor" >&2
@@ -147,6 +153,16 @@ function scrsave_prefs() {
 	esac
 }
 
+function recsave_prefs() {
+	read -p "Would you like to save screenrecords to your local? (y/n/q) " choice
+	case "$choice" in
+		y|Y ) sed -i /keep_rec=/c\keep_rec=true "$owodir"/conf.cfg; echo "Saved."; echo ""; misc;;
+		n|N ) sed -i /keep_rec=/c\keep_rec=false "$owodir"/conf.cfg; echo "Saved."; echo ""; misc;;
+		q|Q ) echo ""; misc;;
+		* ) echo "Invalid selection. Please choose y or n.";;
+	esac
+}
+
 function cursor_prefs() {
 	read -p "Would you like to capture the cursor in screenshots? (y/n/q) " choice
 	case "$choice" in
@@ -171,17 +187,19 @@ function misc() {
 	echo "Miscellaneous Settings"
 	echo "1) Notification preferences"
 	echo "2) Screenshot saving preferences"
-	echo "3) Screenshot cursor preferences"
-	echo "4) Clipboard copying preferences"
+	echo "3) Screenrecord saving preferences"
+	echo "4) Cursor visibility preferences"
+	echo "5) Clipboard copying preferences"
 	echo "q) Go back"
 	read -p "Please enter your selection: " selection
 	case "$selection" in
 		1 ) notif_prefs;;
 		2 ) scrsave_prefs;;
-		3 ) cursor_prefs;;
-		4 ) xclip_prefs;;
+		3 ) recsave_prefs;;
+		4 ) cursor_prefs;;
+		5 ) xclip_prefs;;
 		q ) echo ""; settings;;
-		* ) echo "Invalid selection. Please choose 1, 2, 3, or 4."; misc;;
+		* ) echo "Invalid selection. Please choose 1, 2, 3, 4, or 5."; misc;;
 	esac
 }
 
@@ -283,7 +301,7 @@ function screenshot() {
 		item="$(grep -E -o '"url":\s*"[^"]+"' <<<"${upload}" | cut -d "\"" -f 4)"
 		d="$1"
 		if [ "$d" = true ]; then
-			if [ "$scr_copy" = true ]; then
+			if [ "$url_copy" = true ]; then
 				clipboard "https://$output_url/$item"
 				notify "Upload complete! Copied the link to your clipboard."
 				echo "https://$output_url/$item"
@@ -330,7 +348,9 @@ function upload() {
 	if grep -E -q '"success":\s*true' <<< "${upload}"; then
 		d="$2"
 		if [ "$d" = true ]; then
-			clipboard "https://$output_url/$item"
+			if [ "$url_copy" = true ]; then
+				clipboard "https://$output_url/$item"
+			fi
 			echo "https://$output_url/$item"
 			echo "$(date): https://$output_url/$item" >> $owodir/upload.log
 		else
@@ -395,7 +415,14 @@ function screenrecord() {
 		echo "Cancelled..."
 		exit 1
 	fi
+
+	CAPTURE_CURSOR=0
+	if [ "$cap_cursor" = "true" ]; then
+		CAPTURE_CURSOR=1
+	fi
+
 	ffmpeg -loglevel warning -y -f x11grab -show_region 1 -framerate 15 \
+		-draw_mouse "$CAPTURE_CURSOR" \
 		-s "$W"x"$H" -i :0.0+"$X","$Y" -codec:v huffyuv   \
 		-vf crop="iw-mod(iw\\,2):ih-mod(ih\\,2)" "$TMP_AVI" &
 	PID="$!"
@@ -405,6 +432,13 @@ function screenrecord() {
 	# ffmpeg -y -loglevel warning -i $TMP_AVI -c:v libvpx -b:v 1M -c:a libvorbis $TMP_GIF
 	ffmpeg -v warning -i "$TMP_AVI" -vf "fps=15,palettegen=stats_mode=full" -y $TMP_PALETTE
 	ffmpeg -v warning -i "$TMP_AVI" -i "$TMP_PALETTE" -lavfi "fps=15 [x]; [x][1:v] paletteuse=dither=sierra2_4a" -y $TMP_GIF
+
+	if [ "$keep_rec" = "true" ]; then
+		#Make a directory for our user if it doesn't already exist.
+		mkdir -p "$rec_path"
+		cp "$TMP_GIF" "$rec_path$rec_filename"
+	fi
+
 	upload "$TMP_GIF" true
 }
 ##################################
