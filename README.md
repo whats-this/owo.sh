@@ -1,5 +1,5 @@
 # OwO.sh
-[![Build Status](https://travis-ci.org/whats-this/owo.sh.svg?branch=master)](https://travis-ci.org/whats-this/owo.sh)
+
 
 A basic example/uploader for uploading to [owo-whats-th.is](https://owo.whats-th.is)'s image server. The aim was to have a script that allowed for users of all operating systems (that werent already supported by ShareX) to also be able to upload to whats-th.is related products.
 
