@@ -39,11 +39,13 @@ scriptdir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 owodir="$HOME/.config/owo"
 
 if [ -d $owodir ]; then
+
 	cp $owodir/conf.cfg $owodir/conf.cfg.bak
 fi
 
 if [ ! -d $owodir ]; then
 	mkdir -p $owodir
+	chown -R $USER:$USER $owodir
 fi
 
 cp -r $scriptdir/* $owodir
