@@ -420,11 +420,15 @@ function screenrecord() {
 	if [ "$cap_cursor" = "true" ]; then
 		CAPTURE_CURSOR=1
 	fi
-
+        if is_mac(); then
+	ffmpeg -f avfoundation -i "default:default" -codec:v huffyuv "$TMP_AVI"
+	else
+	
 	ffmpeg -loglevel warning -y -f x11grab -show_region 1 -framerate 15 \
 		-draw_mouse "$CAPTURE_CURSOR" \
 		-s "$W"x"$H" -i :0.0+"$X","$Y" -codec:v huffyuv   \
 		-vf crop="iw-mod(iw\\,2):ih-mod(ih\\,2)" "$TMP_AVI" &
+	fi
 	PID="$!"
 	echo "$PID" > ~/.config/owo/gif.pid &
 	wait "$PID"
