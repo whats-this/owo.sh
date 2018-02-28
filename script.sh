@@ -420,7 +420,7 @@ function screenrecord() {
 	if [ "$cap_cursor" = "true" ]; then
 		CAPTURE_CURSOR=1
 	fi
-        if is_mac(); then
+        if is_mac; then
 	ffmpeg -f avfoundation -i "default:default" -codec:v huffyuv "$TMP_AVI"
 	else
 	
