@@ -3,8 +3,7 @@
 # The type as listed above
 Type=Application
 
-# The version of the desktop entry specification to which this file 
-complies
+# The version of the desktop entry specification to which this file complies
 Version=1.0
 
 # The name of the application
@@ -12,16 +11,13 @@ Name=OwO
 
 # A comment which can/will be used as a tooltip
 Comment=Screenshoter, Uploader, and Shortener for owo
-# The path to the folder in which the executable is run
-Path=/usr/local/bin/owo-gui
 
 # The executable of the application, possibly with arguments.
 Exec=owo-gui
 # The name of the icon that will be used to display this entry
-Icon=/usr/share/applications/owo.png
+Icon=owo
 
-# Describes whether this application needs to be run in a terminal or 
-not
+# Describes whether this application needs to be run in a terminal or not
 Terminal=false
 
 # Describes the categories in which this entry should be shown
