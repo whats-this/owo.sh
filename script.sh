@@ -410,7 +410,7 @@ function screenrecord() {
 	trap on_sigint SIGINT
 
 	touch ~/.config/owo/gif.pid
-	if [ ! is_mac() ]; then
+	if ! [ is_mac() ]; then
 	read -r X Y W H G ID < <(slop -f "%x %y %w %h %g %i" -q)
 	fi
 	if [ -z "$X" ]; then
