@@ -17,10 +17,15 @@
 # A big thank you to jomo/imgur-screenshot to which I've edited parts
 # of his script into my own.
 trap '' 2
-if [ ! "$(id -u)" -ne 0 ]; then
-	echo "ERROR : This script cannot be run as sudo."
-	echo "ERROR : You need to remove the sudo from \"sudo ./setup.sh\"."
-	exit 2
+if [ "$(id -u)" -eq 0 ] && [[ $EUID > 0 ]]; then
+	if [[ $EUID > 0 ]]; then
+		echo "ERROR : This script cannot be run as sudo."
+		echo "ERROR : You need to remove the sudo from \"sudo ./setup.sh\"."
+		exit 2
+	else # allow to run from root but not from sudo, but warn nonetheless
+		echo "WARN  : This script shouldn't be run from root."
+		echo "WARN  : Consider creating a proper user with limited permissions for security's sake."
+	fi
 fi
 
 owodir="$HOME/.config/owo"
