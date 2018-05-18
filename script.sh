@@ -421,7 +421,10 @@ function screenrecord() {
 		CAPTURE_CURSOR=1
 	fi
         if is_mac; then
-	ffmpeg -f avfoundation -i "default:default" -codec:v huffyuv "$TMP_AVI"
+	ffmpeg -loglevel warning -y -f avfoundation -i "default:default" \
+		-draw_mouse "$CAPTURE_CURSOR" \
+		-s "$W"x"$H" -i :0.0+"$X","$Y" -codec:v huffyuv   \
+		-vf crop="iw-mod(iw\\,2):ih-mod(ih\\,2)" "$TMP_AVI" &
 	else
 	
 	ffmpeg -loglevel warning -y -f x11grab -show_region 1 -framerate 15 \
