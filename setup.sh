@@ -73,7 +73,7 @@ else
 	(command -v notify-send >/dev/null 2>&1 && echo "FOUND : found notify-send") || { echo "Notify-send not found. Please install it via your package manager."; dependencies=1; }
 	(command -v maim >/dev/null 2>&1 && echo "FOUND : found maim") || { echo "Maim not found. Please install it via your package manager."; dependencies=1; }
 	(command -v xclip >/dev/null 2>&1 && echo "FOUND : found xclip") || { echo "Xclip not found. Please install it via your package manager."; dependencies=1; }
-	(command -v slop >/dev/null 2>&1 && echo "FOUND : found scrot") || { echo "Slop not found. Please install via your package manager."; dependencies=1; }
+	(command -v slop >/dev/null 2>&1 && echo "FOUND : found slop") || { echo "Slop not found. Please install via your package manager."; dependencies=1; }
   if [ $dependencies -eq 1 ]; then
     echo
     echo "Please install the missing dependencie(s) then run this script again."
