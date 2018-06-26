@@ -24,6 +24,7 @@ USERAGENT="WhatsThisClient (https://github.com/whats-this/owo.sh, $VERSION)"
 VERBOSE=${OWO_VERBOSE:-}
 COLORS=${OWO_COLORS:-1}
 COPY_CLIPBOARD=${OWO_COPY_CLIPBOARD:-}
+SCREENSHOTS_DIR=${OWO_SCREENSHOTS_DIR:-}
 DOMAIN=${OWO_DOMAIN:-https://owo.whats-th.is/}
 FULLSCREEN_SCREENSHOT=${OWO_FULLSCREEN_SCREENSHOT:-}
 NO_CURSOR=${OWO_NO_CURSOR:-}
@@ -535,20 +536,27 @@ function upload() {
 }
 
 function screenshot() {
-    # TODO: persistent screenshots
-    local tempfile=$(mktemp /tmp/outXXXXXXX.png)
+    if [ "$SCREENSHOTS_DIR" ]; then
+        if [ ! -d "$SCREENSHOTS_DIR" ]; then
+            mkdir -p $SCREENSHOTS_DIR
+        fi
+        # TODO: is this date supported on macOS?
+        local outfile=$SCREENSHOTS_DIR/$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    else
+        local outfile=$(mktemp /tmp/outXXXXXXX.png)
+    fi
 
     function _screenshot_cleanup() {
         debug "cleaning up after screenshot"
-        rm -f $tempfile
+        rm -f $outfile
     }
     trap_add _screenshot_cleanup EXIT
 
     if is_mac; then
         if [ "$FULLSCREEN_SCREENSHOT" ]; then
-            screencapture -o "$tempfile"
+            screencapture -o "$outfile"
         else
-            screencapture -o -i "$tempfile"
+            screencapture -o -i "$outfile"
         fi
     elif command -v maim > /dev/null; then
         local cmdline="maim --quiet"
@@ -558,13 +566,13 @@ function screenshot() {
         if [ "$NO_CURSOR" ]; then
             cmdline="$cmdline --hidecursor"
         fi
-        cmdline="$cmdline $tempfile"
+        cmdline="$cmdline $outfile"
         eval $cmdline
     else
         fail "missing maim on linux, please install it using your package manager of choice"
     fi
 
-    upload $tempfile
+    upload $outfile
 }
 
 function record() {
@@ -677,6 +685,7 @@ function usage() {
     echoerr "      --key <key> key to authorize with"
     echoerr "      --domain <domain> domain to use for resulting uploads"
     echoerr "      --no-cursor disable cursor in screenshots"
+    echoerr "      --screenshots-dir <directory> permanently save screenshots, empty to disable, will be created if doesn't exist"
     echoerr "      --record-format recorder format"
 }
 
@@ -744,6 +753,7 @@ while getopts_long :vhu:cfsrl: opt \
     no-cursor 0 \
     record 0 \
     shorten 1 \
+    screeenshots-dir 1 \
     record-format 1 \
     "" "$@"
 do
@@ -762,6 +772,7 @@ do
         no-cursor ) NO_CURSOR=1 ;;
         r|record ) RECORD=1 ;;
         l|shorten ) SHORTEN="$OPTLARG" ;;
+        screenshots-dir ) SCREENSHOTS_DIR="$OPTLARG" ;;
         record-format ) fail "this option hasn't been implemented yet" ;;
         : ) logfail "$OPTLERR"; usage; exit 1 ;;
     esac
