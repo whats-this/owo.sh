@@ -448,28 +448,38 @@ function prepare_file_links() {
     done
 }
 
-function parsefilesjson() {
+_JSON_ERROR_MSG="you need jq, python (2.6 and above) or ruby (v1.9.3 and above or below with json gem)"
+function json_get_value() {
     if command -v jq > /dev/null; then
-        # TODO: check for errors
-        # TODO: figure out if this is OK
-        links=( $(cat $@ | jq -r '.files | map(.url) | join(" ")') )
+        # XXX: doesn't handle quotes in items
+        echo "$(echo $1 | jq --argjson k \"$2\" -r '.[$k]')"
     elif command -v python > /dev/null; then
-        links=( $(cat $@ | python -c 'from __future__ import print_function; import json; import sys; print(" ".join(map(lambda o: o["url"], json.load(sys.stdin)["files"])))') )
+        # XXX: doesn't handle uppercase chars (because of True -> true
+        # conversion)
+        echo "$(echo $1 | python -c 'from __future__ import print_function; import json, sys; k=sys.argv[1]; print(str(json.load(sys.stdin)[k]).lower())' $2)"
     elif command -v ruby > /dev/null; then
-        links=( $(cat $@ | ruby -e 'require "json"; puts(JSON.load($stdin)["files"].map { |o| o["url"] }.join(" "))') )
+        echo "$(echo $1 | ruby -e 'require "json"; k=ARGV[0]; puts(JSON.load($stdin)[k])' $2)"
     else
-        fail "you need jq, python (2.6 and above) or ruby (v1.9.3 and above or below with json gem)"
+        fail "$_JSON_ERROR_MSG"
     fi
 }
 
-function parselinksjson() {
-    # TODO
-    return
+function json_map_string_array() {
+    # XXX: doesn't handle spaces in items
+    if command -v jq > /dev/null; then
+        # TODO: figure out if this is OK
+        echo "$(echo $1 | jq --argjson k1 "\"$2\"" --argjson k2 \"$3\" -r '.[$k1] | map(.[$k2]) | join(" ")')"
+    elif command -v python > /dev/null; then
+        echo $(echo $1 | python -c 'from __future__ import print_function; import json, sys; k1=sys.argv[1]; k2=sys.argv[2]; print(" ".join(map(lambda o: o[k2], json.load(sys.stdin)[k1])))' "$2" "$3")
+    elif command -v ruby > /dev/null; then
+        echo $(echo $1 | ruby -e 'require "json"; k1=ARGV[0]; k2=ARGV[1]; puts(JSON.load($stdin)[k1].map { |o| o[k2] }.join(" "))' "$2" "$3")
+    else
+        fail "$_JSON_ERROR_MSG"
+    fi
 }
 
-function parseerror() {
-    # TODO
-    return
+function parsefilesjson() {
+    links=( $(json_map_string_array "$(cat $@)" 'files' 'url') )
 }
 
 function upload() {
