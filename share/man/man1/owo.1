@@ -8,49 +8,49 @@ owo \- make use of whats-th.is file upload and link shortening services
 This little tool helps you upload files and shorten links via awau.moe.
 .SH OPTIONS
 .TP
-\-h, \-\-help
+\fB\-h\fR, \fB\-\-help\fR
 display a short help text
 .TP
-\-v, \-\-verbose
+\fB\-v\fR, \fB\-\-verbose\fR
 enable verbose logging
 .TP
-\-\-version
+\fB\-\-version\fR
 show version and copyright information
 .TP
-\-\-dry-run
+\fB\-\-dry-run\fR
 do not actually upload
 .TP
-\-\-no\-colors
+\fB\-\-no\-colors\fR
 disable ascii coloring
 .TP
-\-l, \-\-shorten=l
-shorten a link passed as string l
+\fB\-l\fR, \fB\-\-shorten\fR link
+shorten a link passed as string 'link'
 .TP
-\-u, \-\-upload=f
-upload a file passed as string f, this option can be repeated
+\fB\-u\fR, \fB\-\-upload\fR file
+upload a file passed as string 'file', this option can be repeated
 .TP
-\-s, \-\-screenshot
+\fB\-s\fR, \fB\-\-screenshot\fR
 select and screenshot
 .TP
-\-r, \-\-record
+\fB\-r\fR, \fB\-\-record\fR
 record screen
 .TP
-\-\-fullscreen
+\fB\-\-fullscreen\fR
 enable fullscreen screenshots, use with -s or -r
 .TP
-\-\-key=k
-key to authorize with, passed as string k
+\fB\-\-key\fR key
+key to authorize with, passed as string 'key'
 .TP
-\-\-domain=d
-domain to use for resulting uploads, passed as string d
+\fB\-\-domain\fR domain
+domain to use for resulting uploads, passed as string 'domain'
 .TP
-\-\-no\-cursor
+\fB\-\-no\-cursor\fR
 disable cursor in screenshots
 .TP
-\-\-screenshots\-dir
-screenshots directory, empty to disable, will be created if doesn't exist
+\fB\-\-screenshots\-dir\fR dir
+screenshots directory, empty to disable, will be created if doesn't exist, passed as string 'dir'
 .TP
-\-\-record\-format
+\fB\-\-record\-format\fR
 recorder format
 
 .SH EXAMPLES
@@ -61,7 +61,7 @@ Upload file:
 .PP
 .TP
 Shorten link:
-.B oow
+.B owo
 \-l 'https://duckduckgo.com'
 .PP
 .SH EXIT STATUS
