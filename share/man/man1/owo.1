@@ -1,0 +1,72 @@
+.TH owo 1  "June 26, 2018" "version 1.0.0" "USER COMMANDS"
+.SH NAME
+owo \- make use of whats-th.is file upload and link shortening services
+.SH SYNOPSIS
+.B owo
+owo [option...] [file...]
+.SH DESCRIPTION
+This little tool helps you upload files and shorten links via awau.moe.
+.SH OPTIONS
+.TP
+\-h, \-\-help
+display a short help text
+.TP
+\-v, \-\-verbose
+enable verbose logging
+.TP
+\-\-version
+show version and copyright information
+.TP
+\-\-dry-run
+do not actually upload
+.TP
+\-\-no\-colors
+disable ascii coloring
+.TP
+\-l, \-\-shorten=l
+shorten a link passed as string l
+.TP
+\-u, \-\-upload=f
+upload a file passed as string f, this option can be repeated
+.TP
+\-s, \-\-screenshot
+select and screenshot
+.TP
+\-r, \-\-record
+record screen
+.TP
+\-\-fullscreen
+enable fullscreen screenshots, use with -s or -r
+.TP
+\-\-key=k
+key to authorize with, passed as string k
+.TP
+\-\-domain=d
+domain to use for resulting uploads, passed as string d
+.TP
+\-\-no\-cursor
+disable cursor in screenshots
+.TP
+\-\-record\-format
+recorder format
+
+.SH EXAMPLES
+.TP
+Upload file:
+.B owo
+\-u test.bin
+.PP
+.TP
+Shorten link:
+.B oow
+\-l 'https://duckduckgo.com'
+.PP
+.SH EXIT STATUS
+owo returns a zero exit status if it succeeds in all given tasks.
+Non zero is returned in case of failure, as script uses set -e.
+.SH AUTHOR
+OwO developers (devs (at) whats-th.is)
+.SH SEE ALSO
+curl(1)
+maim(1)
+slop(1)

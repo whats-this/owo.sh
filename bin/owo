@@ -1,0 +1,806 @@
+#!/usr/bin/env bash
+# owo uploads files and shortens links
+# Copyright (C) 2018 OwO developers
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+set -e
+
+# Globals #
+VERSION="v1.0.0"
+USERAGENT="WhatsThisClient (https://github.com/whats-this/owo.sh, $VERSION)"
+
+# CLI Variables #
+VERBOSE=${OWO_VERBOSE:-}
+COLORS=${OWO_COLORS:-1}
+COPY_CLIPBOARD=${OWO_COPY_CLIPBOARD:-}
+DOMAIN=${OWO_DOMAIN:-https://owo.whats-th.is/}
+FULLSCREEN_SCREENSHOT=${OWO_FULLSCREEN_SCREENSHOT:-}
+NO_CURSOR=${OWO_NO_CURSOR:-}
+KEY=${OWO_KEY:-}
+
+# Tasks #
+UPLOAD=( )
+SCREENSHOT=
+RECORD=
+SHORTEN=
+
+# Getopts #
+# Taken from http://stchaz.free.fr/getopts_long.sh
+getopts_long() {
+  [ -n "${ZSH_VERSION+z}" ] && emulate -L sh
+
+  unset OPTLERR OPTLARG || :
+
+  case "$OPTLIND" in
+    "" | 0 | *[!0-9]*)
+      # First time in the loop. Initialise the parameters.
+      OPTLIND=1
+      OPTLPENDING=
+      ;;
+  esac
+
+  if [ "$#" -lt 2 ]; then
+    printf >&2 'getopts_long: not enough arguments\n'
+    return 1
+  fi
+
+  # validate variable name. Need to fix locale for character ranges.
+  LC_ALL=C command eval '
+    case "$2" in
+      *[!a-zA-Z_0-9]*|""|[0-9]*)
+    printf >&2 "getopts_long: invalid variable name: \`%s'\''\n" "$2"
+    return 1
+    ;;
+    esac'
+
+  # validate short option specification
+  case "$1" in
+    ::*|*:::*|*-*)
+      printf >&2 "getopts_long: invalid option specification: \`%s'\n" "$1"
+      return 1
+      ;;
+  esac
+
+  # validate long option specifications
+
+  # POSIX shells only have $1, $2... as local variables, hence the
+  # extensive use of "set" in that function.
+
+  set 4 "$@"
+  while :; do
+    if
+      [ "$1" -gt "$#" ] || {
+    eval 'set -- "${'"$1"'}" "$@"'
+    [ -n "$1" ] || break
+    [ "$(($2 + 2))" -gt "$#" ]
+      }
+    then
+      printf >&2 "getopts_long: long option specifications must end in an empty argument\n"
+      return 1
+    fi
+    eval 'set -- "${'"$(($2 + 2))"'}" "$@"'
+    # $1 = type, $2 = name, $3 = $@
+    case "$2" in
+      *=*)
+    printf >&2 "getopts_long: invalid long option name: \`%s'\n" "$2"
+    return 1
+    ;;
+    esac
+    case "$1" in
+      0 | no_argument) ;;
+      1 | required_argument) ;;
+      2 | optional_argument) ;;
+      *)
+    printf >&2 "getopts_long: invalid long option type: \`%s'\n" "$1"
+    return 1
+    ;;
+    esac
+    eval "shift 3; set $(($3 + 2))"' "$@"'
+  done
+  shift
+
+  eval "shift; set $(($1 + $OPTLIND))"' "$@"'
+
+  # unless there are pending short options to be processed (in
+  # $OPTLPENDING), the current option is now in ${$1}
+
+  if [ -z "$OPTLPENDING" ]; then
+    [ "$1" -le "$#" ] || return 1
+    eval 'set -- "${'"$1"'}" "$@"'
+
+    case "$1" in
+      --)
+        OPTLIND=$(($OPTLIND + 1))
+    return 1
+    ;;
+      --*)
+        OPTLIND=$(($OPTLIND + 1))
+        ;;
+      -?*)
+        OPTLPENDING="${1#-}"
+    shift
+    ;;
+      *)
+        return 1
+    ;;
+    esac
+  fi
+
+  if [ -n "$OPTLPENDING" ]; then
+    # WA for zsh and bash 2.03 bugs:
+    OPTLARG=${OPTLPENDING%"${OPTLPENDING#?}"}
+    set -- "$OPTLARG" "$@"
+    OPTLPENDING="${OPTLPENDING#?}"
+    unset OPTLARG
+
+    # $1 = current option = ${$2+1}, $3 = $@
+
+    [ -n "$OPTLPENDING" ] ||
+      OPTLIND=$(($OPTLIND + 1))
+
+    case "$1" in
+      [-:])
+    OPTLERR="bad option: \`-$1'"
+    case "$3" in
+      :*)
+        eval "$4=:"
+        OPTLARG="$1"
+        ;;
+      *)
+        printf >&2 '%s\n' "$OPTLERR"
+        eval "$4='?'"
+        ;;
+    esac
+    ;;
+
+      *)
+    case "$3" in
+      *"$1"::*) # optional argument
+        eval "$4=\"\$1\""
+        if [ -n "$OPTLPENDING" ]; then
+          # take the argument from $OPTLPENDING if any
+          OPTLARG="$OPTLPENDING"
+          OPTLPENDING=
+          OPTLIND=$(($OPTLIND + 1))
+        fi
+        ;;
+
+      *"$1":*) # required argument
+        if [ -n "$OPTLPENDING" ]; then
+          # take the argument from $OPTLPENDING if any
+          OPTLARG="$OPTLPENDING"
+          eval "$4=\"\$1\""
+          OPTLPENDING=
+          OPTLIND=$(($OPTLIND + 1))
+        else
+          # take the argument from the next argument
+          if [ "$(($2 + 2))" -gt "$#" ]; then
+        OPTLERR="option \`-$1' requires an argument"
+        case "$3" in
+          :*)
+            eval "$4=:"
+            OPTLARG="$1"
+            ;;
+          *)
+            printf >&2 '%s\n' "$OPTLERR"
+            eval "$4='?'"
+            ;;
+        esac
+          else
+        OPTLIND=$(($OPTLIND + 1))
+        eval "OPTLARG=\"\${$(($2 + 2))}\""
+        eval "$4=\"\$1\""
+          fi
+        fi
+        ;;
+
+      *"$1"*) # no argument
+        eval "$4=\"\$1\""
+        ;;
+      *)
+        OPTLERR="bad option: \`-$1'"
+        case "$3" in
+          :*)
+        eval "$4=:"
+        OPTLARG="$1"
+        ;;
+          *)
+        printf >&2 '%s\n' "$OPTLERR"
+        eval "$4='?'"
+        ;;
+        esac
+        ;;
+    esac
+    ;;
+    esac
+  else # long option
+
+    # remove the leading "--"
+    OPTLPENDING="$1"
+    shift
+    set 6 "${OPTLPENDING#--}" "$@"
+    OPTLPENDING=
+
+    while
+      eval 'set -- "${'"$1"'}" "$@"'
+      [ -n "$1" ]
+    do
+      # $1 = option name = ${$2+1}, $3 => given option = ${$4+3}, $5 = $@
+
+      case "${3%%=*}" in
+    "$1")
+      OPTLPENDING=EXACT
+      break;;
+      esac
+
+      # try to see if the current option can be seen as an abbreviation.
+      case "$1" in
+    "${3%%=*}"*)
+      if [ -n "$OPTLPENDING" ]; then
+        [ "$OPTLPENDING" = AMBIGUOUS ] || eval '[ "${'"$(($OPTLPENDING + 1))"'}" = "$1" ]' ||
+          OPTLPENDING=AMBIGUOUS
+          # there was another different option matching the current
+          # option. The eval thing is in case one option is provided
+          # twice in the specifications which is OK as per the
+          # documentation above
+      else
+        OPTLPENDING="$2"
+      fi
+      ;;
+      esac
+      eval "shift 2; set $(($2 + 2)) "'"$@"'
+    done
+
+    case "$OPTLPENDING" in
+      AMBIGUOUS)
+    OPTLERR="option \`--${3%%=*}' is ambiguous"
+    case "$5" in
+      :*)
+        eval "$6=:"
+        OPTLARG="${3%%=*}"
+        ;;
+      *)
+        printf >&2 '%s\n' "$OPTLERR"
+        eval "$6='?'"
+        ;;
+    esac
+    OPTLPENDING=
+    return 0
+    ;;
+      EXACT)
+        eval 'set "${'"$(($2 + 2))"'}" "$@"'
+    ;;
+      "")
+    OPTLERR="bad option: \`--${3%%=*}'"
+    case "$5" in
+      :*)
+        eval "$6=:"
+        OPTLARG="${3%%=*}"
+        ;;
+      *)
+        printf >&2 '%s\n' "$OPTLERR"
+        eval "$6='?'"
+        ;;
+    esac
+    OPTLPENDING=
+    return 0
+    ;;
+      *)
+        # we've got an abbreviated long option.
+    shift
+        eval 'set "${'"$(($OPTLPENDING + 1))"'}" "${'"$OPTLPENDING"'}" "$@"'
+    ;;
+    esac
+
+    OPTLPENDING=
+
+    # $1 = option type, $2 = option name, $3 unused,
+    # $4 = given option = ${$5+4}, $6 = $@
+
+    case "$4" in
+      *=*)
+    case "$1" in
+      1 | required_argument | 2 | optional_argument)
+        eval "$7=\"\$2\""
+        OPTLARG="${4#*=}"
+        ;;
+      *)
+        OPTLERR="option \`--$2' doesn't allow an argument"
+        case "$6" in
+          :*)
+        eval "$7=:"
+        OPTLARG="$2"
+        ;;
+          *)
+        printf >&2 '%s\n' "$OPTLERR"
+        eval "$7='?'"
+        ;;
+        esac
+        ;;
+    esac
+    ;;
+
+      *)
+        case "$1" in
+      1 | required_argument)
+        if [ "$(($5 + 5))" -gt "$#" ]; then
+          OPTLERR="option \`--$2' requires an argument"
+          case "$6" in
+        :*)
+          eval "$7=:"
+          OPTLARG="$2"
+          ;;
+        *)
+          printf >&2 '%s\n' "$OPTLERR"
+          eval "$7='?'"
+          ;;
+          esac
+        else
+          OPTLIND=$(($OPTLIND + 1))
+          eval "OPTLARG=\"\${$(($5 + 5))}\""
+          eval "$7=\"\$2\""
+        fi
+        ;;
+      *)
+        # optional argument (but obviously not provided) or no
+        # argument
+        eval "$7=\"\$2\""
+        ;;
+    esac
+    ;;
+    esac
+  fi
+  return 0
+}
+
+# Traps #
+# https://stackoverflow.com/a/7287873
+# note: printf is used instead of echo to avoid backslash
+# appends a command to a trap
+#
+# - 1st arg:  code to add
+# - remaining args:  names of traps to modify
+#
+trap_add() {
+    trap_add_cmd=$1; shift || fail "${FUNCNAME} usage error"
+    for trap_add_name in "$@"; do
+        trap -- "$(
+            # helper fn to get existing trap command from output
+            # of trap -p
+            extract_trap_cmd() { printf '%s\n' "$3"; }
+            # print existing trap command with newline
+            eval "extract_trap_cmd $(trap -p "${trap_add_name}")"
+            # print the new trap command
+            printf '%s\n' "${trap_add_cmd}"
+        )" "${trap_add_name}" \
+            || fail "unable to add to trap ${trap_add_name}"
+    done
+}
+# set the trace attribute for the above function.  this is
+# required to modify DEBUG or RETURN traps because functions don't
+# inherit them unless the trace attribute is set
+declare -f -t trap_add
+
+# Compat shim #
+_IS_MAC=
+function is_mac() {
+    if [ -z "$_IS_MAC"]; then
+        if uname | grep -q "Darwin"; then
+            _IS_MAC=0
+        else
+            _IS_MAC=1
+        fi
+    fi
+    return $_IS_MAC
+}
+
+_IS_CHROMEOS=
+function is_chromeos() {
+    if [ -z "$_IS_CHROMEOS" ]; then
+        if cat /etc/lsb-release | grep -i chrome; then
+            _IS_CHROMEOS=0
+        else
+            _IS_CHROMEOS=1
+        fi
+    fi
+    return $_IS_CHROMEOS
+}
+
+function clipboard() {
+    if is_mac; then
+        echo "${1}" | tr -d "\n\r" | pbcopy
+    elif is_chromeos; then
+        local content=$(echo $1 | base64)
+        echo -e "\x1b]52;c;$content\x07"
+        echo -e "\ePtmux;\e\e]52;c;$content\a\e\\"
+    else
+        echo "${1}" | tr -d "\n\r" | xclip -i -sel c -f | xclip -i -sel p
+    fi
+}
+
+# API #
+function prepare_domain() {
+    local newdomain="$1"
+    if ! [[ "$newdomain" =~ ^https://.* ]]; then
+        newdomain="https://$newdomain"
+    fi
+    if ! [[ "$newdomain" =~ .*/$ ]]; then
+        newdomain="$newdomain/"
+    fi
+    echo $newdomain
+}
+
+function prepare_file_links() {
+    for link in $1; do
+        echo -n "$DOMAIN$link "
+    done
+}
+
+function parsefilesjson() {
+    # TODO
+    if command -v jq > /dev/null; then
+        # TODO: figure out if this is OK
+        links=( $(cat $@ | jq -r '.files | map(.url) | join(" ")') )
+    else
+        fail "you need jq in your PATH"
+    fi
+    # elif command -v python > /dev/null; then
+    #     SCRIPT=`realpath $0`
+    #     SCRIPTPATH=`dirname $SCRIPT`
+    #     links=( $(cat $@ | python $SCRIPTPATH/parsefilesjson.py) )
+    # else
+    #     fail "you need jq or python (2|3) as python in your PATH"
+    # fi
+}
+
+function upload() {
+    # TODO: posix-compat and tempdir
+    local jsontemp=$(mktemp /tmp/outXXXXXXX.json)
+    local apiurl="https://api.awau.moe/upload/pomf?key=$KEY"
+    local cmdline="curl -f -s -o $jsontemp -H 'User-Agent: $USERAGENT' '$apiurl'"
+    local mime
+    local rc
+
+    function _upload_cleanup() {
+        debug "cleaning up after upload"
+        rm -f $jsontemp
+    }
+    trap_add _upload_cleanup EXIT
+
+    for f in $@; do
+        debug "f=$f"
+        if [ "$f" = '-' ]; then # standard input
+            debug "skipping $f because it's stdin pipe"
+            cmdline="$cmdline -F 'files[]=@-;type=application/octet-stream'"
+            continue
+        elif [ "$f" = '\-' ]; then # escaped standard input
+            f='-'
+        fi
+
+        if [ ! -f $f ]; then
+            warn "skipping $f because it doesn't exist"
+            continue
+        fi
+
+        if [ $(stat --printf="%s" $f) -lt 1 ]; then
+            warn "skipping $f because it is empty"
+            continue
+        fi
+
+        if command -v file > /dev/null; then
+            mime=$(file -b --mime-type $f)
+        else
+            mime="application/octet-stream"
+            warn "couldn't get mime for $f because file command doesn't exist, defaulting to application/octet-stream"
+        fi
+
+        debug "got $f with content-type of $mime"
+        cmdline="$cmdline -F 'files[]=@$f;type=$mime'"
+    done
+
+    # TODO: less hacky solution
+    if [[ $cmdline != *"-F"* ]]; then
+        fail "no files to upload"
+    fi
+
+    debug "eval $cmdline"
+    if eval $cmdline; then
+        parsefilesjson $jsontemp
+        local newlinks=( $(prepare_file_links $links) )
+        echo $newlinks
+        if [ "$COPY_CLIPBOARD" ]; then
+            clipboard ${newlinks[0]}
+        fi
+    else
+        fail "upload failed because server returned status not in 2xx range"
+    fi
+}
+
+function screenshot() {
+    # TODO: persistent screenshots
+    local tempfile=$(mktemp /tmp/outXXXXXXX.png)
+
+    function _screenshot_cleanup() {
+        debug "cleaning up after screenshot"
+        rm -f $tempfile
+    }
+    trap_add _screenshot_cleanup EXIT
+
+    if is_mac; then
+        if [ "$FULLSCREEN_SCREENSHOT" ]; then
+            screencapture -o "$tempfile"
+        else
+            screencapture -o -i "$tempfile"
+        fi
+    elif command -v maim > /dev/null; then
+        local cmdline="maim --quiet"
+        if [ -z "$FULLSCREEN_SCREENSHOT" ]; then
+            cmdline="$cmdline -s"
+        fi
+        if [ "$NO_CURSOR" ]; then
+            cmdline="$cmdline --hidecursor"
+        fi
+        cmdline="$cmdline $tempfile"
+        eval $cmdline
+    else
+        fail "missing maim on linux, please install it using your package manager of choice"
+    fi
+
+    upload $tempfile
+}
+
+function record() {
+    if is_mac || is_chromeos; then
+        fail "gif recording is not supported on your platform"
+    fi
+
+    # TODO: xdg
+    if [[ -f $HOME/.config/owo/gif.pid ]]; then
+        local pid=$(cat $HOME/.config/owo/gif.pid)
+        if kill -0 $pid 2> /dev/null; then
+            debug "pid exists, stopping gif recorder"
+            kill -INT $(cat $HOME/.config/owo/gif.pid)
+            exit 0
+        else
+            rm -f $HOME/.config/owo/gif.pid
+        fi
+    fi
+
+    local tempavi=$(mktemp /tmp/outXXXXXXXXXX.avi)
+    local temppalette
+    local tempframe
+    local tempgif=$(mktemp /tmp/outXXXXXXXXXX.gif)
+
+    function _record_cleanup() {
+        debug "cleaning up after record"
+        rm -f $HOME/.config/owo/gif.pid
+        rm -f $tempavi
+        if [ "$temppalette" ]; then
+            rm -f $temppalette
+        fi
+        if [ "$tempframe" ]; then
+            rm -f $tempframe*.png
+        fi
+        rm -f $tempgif
+    }
+    function _record_sigint() {
+        debug "stopping gif encoder"
+        kill -INT $(cat $HOME/.config/owo/gif.pid)
+    }
+    trap_add _record_cleanup EXIT
+    trap_add _record_sigint SIGINT
+
+    touch $HOME/.config/owo/gif.pid
+
+    debug "reading slop"
+    # dunno why this exits with 1
+    read -r X Y W H G ID < <(slop -f "%x %y %w %h %g %i" -q) || true
+    if [ -z "$X" ]; then
+        debug "cancelled"
+        exit 1
+    fi
+
+    if [ -z "$NO_CURSOR" ]; then
+        local drawmouse="1"
+    else
+        local drawmouse="0"
+    fi
+
+    debug "going to start recording"
+    ffmpeg -loglevel warning -y -f x11grab -show_region 1 -framerate 15 \
+        -draw_mouse "$drawmouse" \
+        -s "$W"x"$H" -i :0.0+"$X","$Y" -codec:v huffyuv   \
+        -vf crop="iw-mod(iw\\,2):ih-mod(ih\\,2)" "$tempavi" &
+
+    local pid="$!"
+    echo "$pid" > $HOME/.config/owo/gif.pid
+    wait "$pid"
+
+    # TODO: non-gif formats maybe
+    # TODO: should we enable gifski by default?
+    # its slower but higher quality
+    # if command -v gifski > /dev/null; then
+        # tempframe=$(mktemp /tmp/frameXXXXXXXXXX)
+        # ffmpeg -v warning -i $tempavi -r 15 -f image2 $tempframe%04d.png
+        # gifski --fps 15 --quiet -o $tempgif $tempframe*.png
+    # else
+        temppalette=$(mktemp /tmp/outXXXXXXXXXX.png)
+        ffmpeg -v warning -i "$tempavi" -vf "fps=15,palettegen=stats_mode=full" -y $temppalette
+        ffmpeg -v warning -i "$tempavi" -i "$temppalette" -lavfi "fps=15 [x]; [x][1:v] paletteuse=dither=sierra2_4a" -y $tempgif
+    # fi
+
+    upload $tempgif
+}
+
+function shorten() {
+    fail
+}
+
+# CLI #
+function echoerr() {
+    >&2 echo "$@"
+}
+
+function usage() {
+    echoerr "usage: $0 [option...] [file...]"
+    echoerr ""
+    echoerr "   -h --help show this message"
+    echoerr "   -v --verbose enable verbose logging"
+    echoerr "      --version show version information"
+    echoerr "      --dry-run do not actually upload"
+    echoerr "      --no-colors disable ascii coloring"
+    echoerr "   -l --shorten <link> shorten a link"
+    echoerr "   -u --upload <file> upload a file, repeatable"
+    echoerr "   -s --screenshot select and screenshot"
+    echoerr "   -r --record record screen"
+    echoerr "      --fullscreen enable fullscreen screenshots, use with -s or -r"
+    echoerr ""
+    echoerr "configuration overrides: these flags take precedence over config file"
+    echoerr "      --key <key> key to authorize with"
+    echoerr "      --domain <domain> domain to use for resulting uploads"
+    echoerr "      --no-cursor disable cursor in screenshots"
+    echoerr "      --record-format recorder format"
+}
+
+function version() {
+    echoerr "$(basename $0) $VERSION"
+    echoerr "Copyright (C) 2018 OwO developers"
+    echoerr "This is free software.  You may redistribute copies of it under the terms of"
+    echoerr "the GNU General Public License <https://www.gnu.org/licenses/gpl.html>."
+    echoerr "There is NO WARRANTY, to the extent permitted by law."
+}
+
+function logfail() {
+    if [[ $COLORS ]]; then
+        echoerr -e "\e[31mfail\e[39m: $@"
+    else
+        echoerr -e "fail: $@"
+    fi
+}
+
+function fail() {
+    logfail "$@"
+    exit 1
+}
+
+function warn() {
+    if [[ $COLORS ]]; then
+        echoerr -e "\e[93mwarn\e[39m: $@"
+    else
+        echoerr -e "warn: $@"
+    fi
+}
+
+function debug() {
+    if [[ $VERBOSE  ]] && [[ $COLORS ]]; then
+        echoerr -e "\e[34mdebug\e[39m: $@"
+    elif [[ $VERBOSE ]]; then
+        echoerr -e "debug: $@"
+    fi
+}
+
+# Config #
+_CONFIG=${XDG_CONFIG_HOME:-$HOME/.config}/owo/owo.conf
+CONFIG=${OWO_CONFIG:-$_CONFIG}
+if [ -f $CONFIG ]; then
+    debug "found config at $CONFIG"
+    source $CONFIG
+else
+    debug "no configuration file found at $CONFIG"
+fi
+
+# Main #
+OPTLIND=1
+while getopts_long :vhu:cfsrl: opt \
+    verbose 0 \
+    version 0 \
+    dry-run 0 \
+    help 0 \
+    no-colors 0 \
+    key 1 \
+    domain 1 \
+    upload 1 \
+    clipboard 0 \
+    fullscreen 0 \
+    screenshot 0 \
+    no-cursor 0 \
+    record 0 \
+    shorten 1 \
+    record-format 1 \
+    "" "$@"
+do
+    case "$opt" in
+        v|verbose ) VERBOSE=1 ;;
+        version ) version; exit 0 ;;
+        dry-run ) DRY_RUN=1 ;;
+        h|help ) usage; exit 0 ;;
+        no-colors ) COLORS= ;;
+        key ) KEY="$OPTLARG" ;;
+        domain ) DOMAIN=$(prepared_domain "$OPTLARG") ;;
+        u|upload ) UPLOAD+=("$OPTLARG") ;;
+        c|clipboard ) COPY_CLIPBOARD=1 ;;
+        f|fullscreen ) FULLSCREEN_SCREENSHOT=1 ;;
+        s|screenshot ) SCREENSHOT=1 ;;
+        no-cursor ) NO_CURSOR=1 ;;
+        r|record ) RECORD=1 ;;
+        l|shorten ) SHORTEN="$OPTLARG" ;;
+        record-format ) fail "this option hasn't been implemented yet" ;;
+        : ) logfail "$OPTLERR"; usage; exit 1 ;;
+    esac
+done
+shift "$(($OPTLIND - 1))"
+
+debug "after getopts"
+debug "VERBOSE=$VERBOSE"
+debug "COLORS=$COLORS"
+debug "COPY_CLIPBOARD=$COPY_CLIPBOARD"
+debug "DOMAIN=$DOMAIN"
+debug "FULLSCREEN_SCREENSHOT=$FULLSCREEN_SCREENSHOT"
+debug "NO_CURSOR=$NO_CURSOR"
+debug "KEY=$KEY"
+debug "tasks:"
+debug "UPLOAD=$UPLOAD"
+debug "SCREENSHOT=$SCREENSHOT"
+debug "RECORD=$RECORD"
+debug "SHORTEN=$SHORTEN"
+
+# Sanity checks
+if [ -z "$KEY" ]; then
+    fail "no key specified, use OWO_KEY env var, KEY= in $CONFIG, -k or --key"
+fi
+
+if [ -z "$DOMAIN" ]; then
+    fail "no domain specified, use OWO_DOMAIN env var, DOMAIN= in $CONFIG or --domain"
+fi
+
+if [ "$DRY_RUN" ]; then
+    debug "DRY_RUN set"
+    exit 0
+fi
+
+debug "do the thing"
+# Do the thing
+if [ "$UPLOAD" ]; then
+    upload $UPLOAD
+elif [ "$SCREENSHOT" ]; then
+    screenshot
+elif [ "$RECORD" ]; then
+    record
+elif [ "$SHORTEN" ]; then
+    shorten $SHORTEN
+else
+    upload $@
+fi
+
+# vim: tabstop=4:shiftwidth=4:softtabstop=4:expandtab
