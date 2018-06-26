@@ -829,6 +829,8 @@ elif [ "$RECORD" ]; then
     record
 elif [ "$SHORTEN" ]; then
     shorten $SHORTEN
+elif [ "$#" -eq 0 ]; then
+    upload -
 else
     upload $@
 fi
