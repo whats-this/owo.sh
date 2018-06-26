@@ -448,20 +448,27 @@ function prepare_file_links() {
 }
 
 function parsefilesjson() {
-    # TODO
     if command -v jq > /dev/null; then
+        # TODO: check for errors
         # TODO: figure out if this is OK
         links=( $(cat $@ | jq -r '.files | map(.url) | join(" ")') )
+    elif command -v python > /dev/null; then
+        links=( $(cat $@ | python -c 'from __future__ import print_function; import json; import sys; print(" ".join(map(lambda o: o["url"], json.load(sys.stdin)["files"])))') )
+    elif command -v ruby > /dev/null; then
+        links=( $(cat $@ | ruby -e 'require "json"; puts(JSON.load($stdin)["files"].map { |o| o["url"] }.join(" "))') )
     else
-        fail "you need jq in your PATH"
+        fail "you need jq, python (2.6 and above) or ruby (v1.9.3 and above or below with json gem)"
     fi
-    # elif command -v python > /dev/null; then
-    #     SCRIPT=`realpath $0`
-    #     SCRIPTPATH=`dirname $SCRIPT`
-    #     links=( $(cat $@ | python $SCRIPTPATH/parsefilesjson.py) )
-    # else
-    #     fail "you need jq or python (2|3) as python in your PATH"
-    # fi
+}
+
+function parselinksjson() {
+    # TODO
+    return
+}
+
+function parseerror() {
+    # TODO
+    return
 }
 
 function upload() {
