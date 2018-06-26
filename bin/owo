@@ -486,7 +486,7 @@ function upload() {
     # TODO: posix-compat and tempdir
     local jsontemp=$(mktemp /tmp/outXXXXXXX.json)
     local apiurl="https://api.awau.moe/upload/pomf?key=$KEY"
-    local cmdline="curl -f -s -o $jsontemp -H 'User-Agent: $USERAGENT' '$apiurl'"
+    local cmdline="curl -s -w '%{http_code}' -o >(cat >&3 > $jsontemp) -H 'User-Agent: $USERAGENT' '$apiurl'"
     local mime
     local rc
 
@@ -533,7 +533,9 @@ function upload() {
     fi
 
     debug "eval $cmdline"
-    if eval $cmdline; then
+    exec 3>&1
+    local status="$(eval $cmdline)"
+    if (( 200 <= $status && $status <= 299 )); then
         parsefilesjson $jsontemp
         local newlinks=( $(prepare_file_links $links) )
         echo $newlinks
@@ -541,7 +543,7 @@ function upload() {
             clipboard ${newlinks[0]}
         fi
     else
-        fail "upload failed because server returned status not in 2xx range"
+        fail "upload failed because server returned status not in 2xx range with message: $(json_get_value "$(cat $jsontemp)" 'description')"
     fi
 }
 
