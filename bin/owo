@@ -478,6 +478,12 @@ function parsefilesjson() {
     links=( $(json_map_string_array "$(cat $@)" 'files' 'url') )
 }
 
+function prepare_file_links() {
+    for link in $1; do
+        echo -n "$DOMAIN$link "
+    done
+}
+
 function upload() {
     # TODO: posix-compat and tempdir
     local jsontemp=$(mktemp /tmp/outXXXXXXX.json)
