@@ -492,6 +492,7 @@ function upload() {
 
     function _upload_cleanup() {
         debug "cleaning up after upload"
+        debug "rm -f $jsontemp"
         rm -f $jsontemp
     }
     trap_add _upload_cleanup EXIT
@@ -560,6 +561,7 @@ function screenshot() {
 
     function _screenshot_cleanup() {
         debug "cleaning up after screenshot"
+        debug "rm -f $outfile"
         rm -f $outfile
     }
     trap_add _screenshot_cleanup EXIT
@@ -611,9 +613,12 @@ function record() {
 
     function _record_cleanup() {
         debug "cleaning up after record"
+        debug "rm -f $HOME/.config/owo/gif.pid"
         rm -f $HOME/.config/owo/gif.pid
+        debug "rm -f $tempavi"
         rm -f $tempavi
         if [ "$temppalette" ]; then
+            debug "rm -f $temppalette"
             rm -f $temppalette
         fi
         if [ "$tempframe" ]; then
