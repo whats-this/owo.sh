@@ -19,6 +19,8 @@ set -e
 # Globals #
 VERSION="v1.0.0"
 USERAGENT="WhatsThisClient (https://github.com/whats-this/owo.sh, $VERSION)"
+URL_REGEX='(https?|ftp|file)://[-A-Za-z0-9\+&@#/%?=~_|!:,.;]*[-A-Za-z0-9\+&@#/%=~_|]'
+API_BASE="https://api.awau.moe"
 
 # CLI Variables #
 VERBOSE=${OWO_VERBOSE:-}
@@ -442,12 +444,6 @@ function prepare_domain() {
     echo $newdomain
 }
 
-function prepare_file_links() {
-    for link in $1; do
-        echo -n "$DOMAIN$link "
-    done
-}
-
 _JSON_ERROR_MSG="you need jq, python (2.6 and above) or ruby (v1.9.3 and above or below with json gem)"
 function json_get_value() {
     if command -v jq > /dev/null; then
@@ -485,7 +481,7 @@ function parsefilesjson() {
 function upload() {
     # TODO: posix-compat and tempdir
     local jsontemp=$(mktemp /tmp/outXXXXXXX.json)
-    local apiurl="https://api.awau.moe/upload/pomf?key=$KEY"
+    local apiurl="$API_BASE/upload/pomf?key=$KEY"
     local cmdline="curl -s -w '%{http_code}' -o >(cat >&3 > $jsontemp) -H 'User-Agent: $USERAGENT' '$apiurl'"
     local mime
     local rc
@@ -676,7 +672,29 @@ function record() {
 }
 
 function shorten() {
-    fail
+    local apiurl="$API_BASE/shorten/polr?action=shorten"
+    local url="$@"
+    if [ "$url" = '-' ]; then
+        debug "input is stdin"
+        url=$(cat -)
+    fi
+    debug "url=$url"
+    if [[ "$url" =~ $URL_REGEX ]]; then
+        local result=$(curl -s -G "$apiurl" --data-urlencode "key=$KEY" --data-urlencode "url=$url" -H "User-Agent: $USERAGENT")
+        if grep -q "https://" <<< "${result}"; then
+            local code=$(echo "$result" | sed 's/.*oe\///')
+            echo $code
+            local result="$DOMAIN$code"
+            if [ "$COPY_CLIPBOARD" ]; then
+                clipboard "$result"
+            fi
+            echo "$result"
+        else
+            fail "shortening failed: $result"
+        fi
+    else
+        fail "bad url"
+    fi
 }
 
 # CLI #
@@ -781,7 +799,7 @@ do
         h|help ) usage; exit 0 ;;
         no-colors ) COLORS= ;;
         key ) KEY="$OPTLARG" ;;
-        domain ) DOMAIN=$(prepared_domain "$OPTLARG") ;;
+        domain ) DOMAIN="$OPTLARG" ;;
         u|upload ) UPLOAD+=("$OPTLARG") ;;
         c|clipboard ) COPY_CLIPBOARD=1 ;;
         f|fullscreen ) FULLSCREEN_SCREENSHOT=1 ;;
@@ -795,6 +813,8 @@ do
     esac
 done
 shift "$(($OPTLIND - 1))"
+
+DOMAIN=$(prepare_domain "$DOMAIN")
 
 debug "after getopts"
 debug "VERBOSE=$VERBOSE"
