@@ -830,7 +830,9 @@ elif [ "$RECORD" ]; then
 elif [ "$SHORTEN" ]; then
     shorten $SHORTEN
 elif [ "$#" -eq 0 ]; then
-    echoerr "(type text. ^C to cancel, ^D twice to submit)"
+    if [ -t 0 ]; then
+        echoerr "(type text. ^C to cancel, ^D twice to submit)"
+    fi
     upload -
 else
     upload $@
