@@ -517,7 +517,7 @@ function upload() {
         fi
 
         if command -v file > /dev/null; then
-            mime=$(file -b --mime-type $f)
+            mime=$(file -b --mime-type --mime-encoding $f)
         else
             mime="application/octet-stream"
             warn "couldn't get mime for $f because file command doesn't exist, defaulting to application/octet-stream"
