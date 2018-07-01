@@ -25,6 +25,7 @@ API_BASE="https://api.awau.moe"
 # CLI Variables #
 VERBOSE=${OWO_VERBOSE:-}
 COLORS=${OWO_COLORS:-1}
+NOTIFY=${OWO_NOTIFY:-}
 COPY_CLIPBOARD=${OWO_COPY_CLIPBOARD:-}
 SCREENSHOTS_DIR=${OWO_SCREENSHOTS_DIR:-}
 DOMAIN=${OWO_DOMAIN:-https://owo.whats-th.is/}
@@ -408,6 +409,20 @@ tempdir() {
     ([ "$TMPDIR" ] && echo "$TMPDIR") || ([ "$TMP" ] && echo "$TMP") || ([ "$TEMP" ] && echo "$TEMP") || echo "/tmp"
 }
 
+prefix() {
+    # TODO: this is fragile and not bullet-proof
+    # relying on $0 is bad and readlink may not be
+    # present on some systems
+    local dir="$(dirname $(readlink -f $0))"
+    if [ -d "$dir" ]; then
+        echo "$(dirname $dir)"
+    else
+        echo "$(dirname $(dirname $(readlink -f $(which $0))))"
+    fi
+}
+
+PREFIX=$(prefix)
+
 _IS_MAC=
 is_mac() {
     if [ -z "$_IS_MAC" ]; then
@@ -449,6 +464,74 @@ _filesize() {
         stat -f '%z' $1
     else
         stat --printf '%s' $1
+    fi
+}
+
+notify() {
+    local OPTLIND=1
+    while getopts_long :t:m:i:e:g: opt \
+        title 1 \
+        message 1 \
+        icon 1 \
+        expire-time 1 \
+        group 1 \
+        "" "$@"
+    do
+        case "$opt" in
+            t|title ) local TITLE="$OPTLARG" ;;
+            m|message ) local MESSAGE="$OPTLARG" ;;
+            i|icon ) local ICON="$OPTLARG" ;;
+            e|expire-time ) local EXPIRE_TIME="$OPTLARG" ;;
+            g|group ) local GROUP="$OPTLARG" ;;
+            : ) fail "bad options passed to notify" ;;
+        esac
+    done
+    unset opt OPTLARG
+    if is_mac; then
+        # TODO: fuck /usr/local/bin
+        local cmdline="/usr/local/bin/terminal-notifier"
+        if [ "$TITLE" ]; then
+            cmdline="$cmdline -title '$TITLE'"
+        fi
+        if [ "$MESSAGE" ]; then
+            cmdline="$cmdline -message '$MESSAGE'"
+        fi
+        if [ "$ICON" ]; then
+            cmdline="$cmdline -appIcon '$ICON'"
+        fi
+        if [ "$EXPIRE_TIME" ]; then
+            cmdline="$cmdline -timeout $EXPIRE_TIME"
+        fi
+        if [ "$GROUP" ]; then
+            cmdline="$cmdline -group '$GROUP'"
+        fi
+    else
+        local cmdline="notify-send"
+        if [ "$ICON" ]; then
+            cmdline="$cmdline --icon '$ICON'"
+        fi
+        if [ "$EXPIRE_TIME" ]; then
+            cmdline="$cmdline --expire-time $EXPIRE_TIME"
+        fi
+        if [ "$GROUP" ]; then
+            cmdline="$cmdline --category '$GROUP'"
+        fi
+        if [ "$TITLE" ]; then
+            cmdline="$cmdline '$TITLE'"
+        else
+            fail "notify: missing title/summary"
+        fi
+        if [ "$MESSAGE" ]; then
+            cmdline="$cmdline '$MESSAGE'"
+        fi
+    fi
+    debug "eval $cmdline"
+    eval $cmdline
+}
+
+owo_notify() {
+    if [ "$NOTIFY" ]; then
+        notify -t 'owo.whats-th.is' -m "$1" -i "$PREFIX/share/icons/default/500x500/apps/owo.png" -e 5
     fi
 }
 
@@ -593,6 +676,8 @@ screenshot() {
         local outfile=$(mktemp $TMPDIR/outXXXXXXX.png)
     fi
 
+    owo_notify "Select an area to screenshot, ESC to cancel"
+
     _screenshot_cleanup() {
         debug "cleaning up after screenshot"
         debug "rm -f $1"
@@ -620,7 +705,9 @@ screenshot() {
         fail "missing maim on linux, please install it using your package manager of choice"
     fi
 
-    upload $outfile
+    if [ "$SCREENSHOTS_DIR" ]; then
+        owo_notify "Saved to $outfile"
+    fi
 }
 
 record() {
@@ -663,6 +750,7 @@ record() {
         rm -f $4
     }
     _record_sigint() {
+        owo_notify "Stopping screen recorder..."
         debug "stopping gif encoder"
         kill -INT $(cat $HOME/.config/owo/gif.pid)
     }
@@ -671,6 +759,7 @@ record() {
 
     touch $HOME/.config/owo/gif.pid
 
+    owo_notify "Select an area to begin recording, ESC to cancel"
     debug "reading slop"
     # dunno why this exits with 1
     read -r X Y W H G ID < <(slop -f "%x %y %w %h %g %i" -q) || true
@@ -686,6 +775,7 @@ record() {
     fi
 
     debug "going to start recording"
+    owo_notify "Recording..."
     ffmpeg -loglevel warning -y -f x11grab -show_region 1 -framerate 15 \
         -draw_mouse "$drawmouse" \
         -s "$W"x"$H" -i :0.0+"$X","$Y" -codec:v huffyuv   \
@@ -750,6 +840,7 @@ usage() {
     echoerr "      --version         show version information"
     echoerr "      --dry-run         do not actually upload"
     echoerr "      --no-colors       disable ascii coloring"
+    echoerr "      --notify          enable notifications"
     echoerr " -l   --shorten <link>  shorten a link"
     echoerr " -u   --upload <file>   upload a file, repeatable"
     echoerr " -s   --screenshot      select and screenshot"
@@ -819,6 +910,7 @@ while getopts_long :vhu:cfsrl: opt \
     dry-run 0 \
     help 0 \
     no-colors 0 \
+    notify 0 \
     key 1 \
     domain 1 \
     upload 1 \
@@ -838,6 +930,7 @@ do
         dry-run ) DRY_RUN=1 ;;
         h|help ) usage; exit 0 ;;
         no-colors ) COLORS= ;;
+        notify ) NOTIFY=1 ;;
         key ) KEY="$OPTLARG" ;;
         domain ) DOMAIN="$OPTLARG" ;;
         u|upload ) UPLOAD+=("$OPTLARG") ;;
