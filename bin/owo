@@ -434,7 +434,7 @@ is_chromeos() {
 
 _IS_BSD=
 is_bsd() {
-    if [ -z "$_IS_MAC" ]; then
+    if [ -z "$_IS_BSD" ]; then
         if uname -s | grep -q -i "BSD"; then
             _IS_BSD=0
         else
