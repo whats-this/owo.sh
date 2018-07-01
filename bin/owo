@@ -410,7 +410,7 @@ tempdir() {
 
 _IS_MAC=
 is_mac() {
-    if [ -z "$_IS_MAC"]; then
+    if [ -z "$_IS_MAC" ]; then
         if uname | grep -q "Darwin"; then
             _IS_MAC=0
         else
@@ -423,13 +423,33 @@ is_mac() {
 _IS_CHROMEOS=
 is_chromeos() {
     if [ -z "$_IS_CHROMEOS" ]; then
-        if cat /etc/lsb-release | grep -i chrome; then
+        if cat /etc/lsb-release | grep -q -i chrome; then
             _IS_CHROMEOS=0
         else
             _IS_CHROMEOS=1
         fi
     fi
     return $_IS_CHROMEOS
+}
+
+_IS_BSD=
+is_bsd() {
+    if [ -z "$_IS_MAC" ]; then
+        if uname -s | grep -q -i "BSD"; then
+            _IS_BSD=0
+        else
+            _IS_BSD=1
+        fi
+    fi
+    return $_IS_BSD
+}
+
+_filesize() {
+    if is_mac || is_bsd; then
+        stat -f "%s" $1
+    else
+        stat --printf "%s" $1
+    fi
 }
 
 clipboard() {
@@ -526,7 +546,7 @@ upload() {
             continue
         fi
 
-        if [ $(stat --printf "%s" $f) -lt 1 ]; then
+        if [ $(_filesize $f) -lt 1 ]; then
             warn "skipping $f because it is empty"
             continue
         fi
