@@ -446,9 +446,9 @@ is_bsd() {
 
 _filesize() {
     if is_mac || is_bsd; then
-        stat -f "%s" $1
+        stat -f '%z' $1
     else
-        stat --printf "%s" $1
+        stat --printf '%s' $1
     fi
 }
 
