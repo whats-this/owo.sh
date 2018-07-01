@@ -396,6 +396,10 @@ trap_add() {
 declare -f -t trap_add
 
 # Compat shim #
+function tempdir() {
+    ([ "$TMPDIR" ] && echo "$TMPDIR") || ([ "$TMP" ] && echo "$TMP") || ([ "$TEMP" ] && echo "$TEMP") || echo "/tmp"
+}
+
 _IS_MAC=
 function is_mac() {
     if [ -z "$_IS_MAC"]; then
@@ -486,7 +490,7 @@ function prepare_file_links() {
 
 function upload() {
     # TODO: posix-compat and tempdir
-    local jsontemp=$(mktemp /tmp/outXXXXXXX.json)
+    local jsontemp=$(mktemp $TMPDIR/outXXXXXXX.json)
     local apiurl="$API_BASE/upload/pomf?key=$KEY"
     local cmdline="curl -s -w '%{http_code}' -o >(cat >&3 > $jsontemp) -H 'User-Agent: $USERAGENT' '$apiurl'"
     local mime
@@ -558,7 +562,7 @@ function screenshot() {
         # TODO: is this date supported on macOS?
         local outfile=$SCREENSHOTS_DIR/$(date -u +"%Y-%m-%dT%H:%M:%SZ")
     else
-        local outfile=$(mktemp /tmp/outXXXXXXX.png)
+        local outfile=$(mktemp $TMPDIR/outXXXXXXX.png)
     fi
 
     function _screenshot_cleanup() {
@@ -608,10 +612,10 @@ function record() {
         fi
     fi
 
-    local tempavi=$(mktemp /tmp/outXXXXXXXXXX.avi)
+    local tempavi=$(mktemp $TMPDIR/outXXXXXXXXXX.avi)
     local temppalette
     local tempframe
-    local tempgif=$(mktemp /tmp/outXXXXXXXXXX.gif)
+    local tempgif=$(mktemp $TMPDIR/outXXXXXXXXXX.gif)
 
     function _record_cleanup() {
         debug "cleaning up after record"
@@ -669,7 +673,7 @@ function record() {
         # ffmpeg -v warning -i $tempavi -r 15 -f image2 $tempframe%04d.png
         # gifski --fps 15 --quiet -o $tempgif $tempframe*.png
     # else
-        temppalette=$(mktemp /tmp/outXXXXXXXXXX.png)
+        temppalette=$(mktemp $TMPDIR/outXXXXXXXXXX.png)
         ffmpeg -v warning -i "$tempavi" -vf "fps=15,palettegen=stats_mode=full" -y $temppalette
         ffmpeg -v warning -i "$tempavi" -i "$temppalette" -lavfi "fps=15 [x]; [x][1:v] paletteuse=dither=sierra2_4a" -y $tempgif
     # fi
@@ -820,6 +824,7 @@ do
 done
 shift "$(($OPTLIND - 1))"
 
+TMPDIR=$(tempdir)
 DOMAIN=$(prepare_domain "$DOMAIN")
 
 debug "after getopts"
