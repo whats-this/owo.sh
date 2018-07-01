@@ -498,10 +498,10 @@ upload() {
 
     _upload_cleanup() {
         debug "cleaning up after upload"
-        debug "rm -f $jsontemp"
-        rm -f $jsontemp
+        debug "rm -f $1"
+        rm -f $1
     }
-    trap_add _upload_cleanup EXIT
+    trap_add "_upload_cleanup $jsontemp" EXIT
 
     for f in $@; do
         debug "f=$f"
@@ -567,10 +567,10 @@ screenshot() {
 
     _screenshot_cleanup() {
         debug "cleaning up after screenshot"
-        debug "rm -f $outfile"
-        rm -f $outfile
+        debug "rm -f $1"
+        rm -f $1
     }
-    trap_add _screenshot_cleanup EXIT
+    trap_add "_screenshot_cleanup $outfile" EXIT
 
     if is_mac; then
         if [ "$FULLSCREEN_SCREENSHOT" ]; then
@@ -621,22 +621,24 @@ record() {
         debug "cleaning up after record"
         debug "rm -f $HOME/.config/owo/gif.pid"
         rm -f $HOME/.config/owo/gif.pid
-        debug "rm -f $tempavi"
-        rm -f $tempavi
-        if [ "$temppalette" ]; then
-            debug "rm -f $temppalette"
-            rm -f $temppalette
+        debug "rm -f $1"
+        rm -f $1
+        if [ "$2" ]; then
+            debug "rm -f $2"
+            rm -f $2
         fi
-        if [ "$tempframe" ]; then
-            rm -f $tempframe*.png
+        if [ "$3" ]; then
+            debug "rm -f $3*.png"
+            rm -f $3*.png
         fi
-        rm -f $tempgif
+        debug "rm -f $4"
+        rm -f $4
     }
     _record_sigint() {
         debug "stopping gif encoder"
         kill -INT $(cat $HOME/.config/owo/gif.pid)
     }
-    trap_add _record_cleanup EXIT
+    trap_add "_record_cleanup $tempavi $temppalette $tempframe $tempgif" EXIT
     trap_add _record_sigint SIGINT
 
     touch $HOME/.config/owo/gif.pid
