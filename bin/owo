@@ -396,12 +396,12 @@ trap_add() {
 declare -f -t trap_add
 
 # Compat shim #
-function tempdir() {
+tempdir() {
     ([ "$TMPDIR" ] && echo "$TMPDIR") || ([ "$TMP" ] && echo "$TMP") || ([ "$TEMP" ] && echo "$TEMP") || echo "/tmp"
 }
 
 _IS_MAC=
-function is_mac() {
+is_mac() {
     if [ -z "$_IS_MAC"]; then
         if uname | grep -q "Darwin"; then
             _IS_MAC=0
@@ -413,7 +413,7 @@ function is_mac() {
 }
 
 _IS_CHROMEOS=
-function is_chromeos() {
+is_chromeos() {
     if [ -z "$_IS_CHROMEOS" ]; then
         if cat /etc/lsb-release | grep -i chrome; then
             _IS_CHROMEOS=0
@@ -424,7 +424,7 @@ function is_chromeos() {
     return $_IS_CHROMEOS
 }
 
-function clipboard() {
+clipboard() {
     if is_mac; then
         echo "${1}" | tr -d "\n\r" | pbcopy
     elif is_chromeos; then
@@ -437,7 +437,7 @@ function clipboard() {
 }
 
 # API #
-function prepare_domain() {
+prepare_domain() {
     local newdomain="$1"
     if ! [[ "$newdomain" =~ ^https://.* ]]; then
         newdomain="https://$newdomain"
@@ -449,7 +449,7 @@ function prepare_domain() {
 }
 
 _JSON_ERROR_MSG="you need jq, python (2.6 and above) or ruby (v1.9.3 and above or below with json gem)"
-function json_get_value() {
+json_get_value() {
     if command -v jq > /dev/null; then
         # XXX: doesn't handle quotes in items
         echo "$(echo $1 | jq --argjson k \"$2\" -r '.[$k]')"
@@ -464,7 +464,7 @@ function json_get_value() {
     fi
 }
 
-function json_map_string_array() {
+json_map_string_array() {
     # XXX: doesn't handle spaces in items
     if command -v jq > /dev/null; then
         # TODO: figure out if this is OK
@@ -478,17 +478,17 @@ function json_map_string_array() {
     fi
 }
 
-function parsefilesjson() {
+parsefilesjson() {
     links=( $(json_map_string_array "$(cat $@)" 'files' 'url') )
 }
 
-function prepare_file_links() {
+prepare_file_links() {
     for link in $1; do
         echo -n "$DOMAIN$link "
     done
 }
 
-function upload() {
+upload() {
     # TODO: posix-compat and tempdir
     local jsontemp=$(mktemp $TMPDIR/outXXXXXXX.json)
     local apiurl="$API_BASE/upload/pomf?key=$KEY"
@@ -496,7 +496,7 @@ function upload() {
     local mime
     local rc
 
-    function _upload_cleanup() {
+    _upload_cleanup() {
         debug "cleaning up after upload"
         debug "rm -f $jsontemp"
         rm -f $jsontemp
@@ -554,7 +554,7 @@ function upload() {
     fi
 }
 
-function screenshot() {
+screenshot() {
     if [ "$SCREENSHOTS_DIR" ]; then
         if [ ! -d "$SCREENSHOTS_DIR" ]; then
             mkdir -p $SCREENSHOTS_DIR
@@ -565,7 +565,7 @@ function screenshot() {
         local outfile=$(mktemp $TMPDIR/outXXXXXXX.png)
     fi
 
-    function _screenshot_cleanup() {
+    _screenshot_cleanup() {
         debug "cleaning up after screenshot"
         debug "rm -f $outfile"
         rm -f $outfile
@@ -595,7 +595,7 @@ function screenshot() {
     upload $outfile
 }
 
-function record() {
+record() {
     if is_mac || is_chromeos; then
         fail "gif recording is not supported on your platform"
     fi
@@ -617,7 +617,7 @@ function record() {
     local tempframe
     local tempgif=$(mktemp $TMPDIR/outXXXXXXXXXX.gif)
 
-    function _record_cleanup() {
+    _record_cleanup() {
         debug "cleaning up after record"
         debug "rm -f $HOME/.config/owo/gif.pid"
         rm -f $HOME/.config/owo/gif.pid
@@ -632,7 +632,7 @@ function record() {
         fi
         rm -f $tempgif
     }
-    function _record_sigint() {
+    _record_sigint() {
         debug "stopping gif encoder"
         kill -INT $(cat $HOME/.config/owo/gif.pid)
     }
@@ -681,7 +681,7 @@ function record() {
     upload $tempgif
 }
 
-function shorten() {
+shorten() {
     local apiurl="$API_BASE/shorten/polr?action=shorten"
     local url="$@"
     if [ "$url" = '-' ]; then
@@ -708,11 +708,11 @@ function shorten() {
 }
 
 # CLI #
-function echoerr() {
+echoerr() {
     >&2 echo "$@"
 }
 
-function usage() {
+usage() {
     echoerr "usage: $0 [option...] [file...]"
     echoerr ""
     echoerr " -h --help              show this message"
@@ -734,7 +734,7 @@ function usage() {
     echoerr "      --record-format   recorder format"
 }
 
-function version() {
+version() {
     echoerr "$(basename $0) $VERSION"
     echoerr "Copyright (C) 2018 OwO developers"
     echoerr "This is free software.  You may redistribute copies of it under the terms of"
@@ -742,7 +742,7 @@ function version() {
     echoerr "There is NO WARRANTY, to the extent permitted by law."
 }
 
-function logfail() {
+logfail() {
     if [[ $COLORS ]]; then
         echoerr -e "\e[31mfail\e[39m: $@"
     else
@@ -750,12 +750,12 @@ function logfail() {
     fi
 }
 
-function fail() {
+fail() {
     logfail "$@"
     exit 1
 }
 
-function warn() {
+warn() {
     if [[ $COLORS ]]; then
         echoerr -e "\e[93mwarn\e[39m: $@"
     else
@@ -763,7 +763,7 @@ function warn() {
     fi
 }
 
-function debug() {
+debug() {
     if [[ $VERBOSE  ]] && [[ $COLORS ]]; then
         echoerr -e "\e[34mdebug\e[39m: $@"
     elif [[ $VERBOSE ]]; then
