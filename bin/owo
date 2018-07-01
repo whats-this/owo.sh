@@ -526,7 +526,7 @@ upload() {
             continue
         fi
 
-        if [ $(stat --printf="%s" $f) -lt 1 ]; then
+        if [ $(stat --printf "%s" $f) -lt 1 ]; then
             warn "skipping $f because it is empty"
             continue
         fi
