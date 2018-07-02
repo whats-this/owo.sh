@@ -536,14 +536,15 @@ owo_notify() {
 }
 
 clipboard() {
+    debug "copy: $1"
     if is_mac; then
-        echo "${1}" | tr -d "\n\r" | pbcopy
+        echo "$1" | tr -d "\n\r" | pbcopy
     elif is_chromeos; then
         local content=$(echo $1 | base64)
         echo -e "\x1b]52;c;$content\x07"
         echo -e "\ePtmux;\e\e]52;c;$content\a\e\\"
     else
-        echo "${1}" | tr -d "\n\r" | xclip -i -sel c -f | xclip -i -sel p
+        echo "$1" | tr -d "\n\r" | xclip -i -sel c -f | xclip -i -sel p
     fi
 }
 
@@ -708,6 +709,8 @@ screenshot() {
     if [ "$SCREENSHOTS_DIR" ]; then
         owo_notify "Saved to $outfile"
     fi
+    
+    upload $outfile
 }
 
 record() {
