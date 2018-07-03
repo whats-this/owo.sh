@@ -33,6 +33,7 @@ DOMAIN=${OWO_DOMAIN:-https://owo.whats-th.is/}
 FULLSCREEN_SCREENSHOT=${OWO_FULLSCREEN_SCREENSHOT:-}
 NO_CURSOR=${OWO_NO_CURSOR:-}
 KEY=${OWO_KEY:-}
+RECORD_FRAMERATE=${OWO_RECORD_FRAMERATE:-15}
 
 # Tasks #
 UPLOAD=( )
@@ -925,7 +926,7 @@ record() {
 
     debug "going to start recording"
     owo_notify "Recording..."
-    ffmpeg -loglevel $ffmpeg_loglevel -y -f x11grab -show_region 1 -framerate 15 \
+    ffmpeg -loglevel $ffmpeg_loglevel -y -f x11grab -show_region 1 -framerate $RECORD_FRAMERATE \
         -draw_mouse "$drawmouse" \
         -s "$W"x"$H" -i :0.0+"$X","$Y" -codec:v huffyuv   \
         -vf crop="iw-mod(iw\\,2):ih-mod(ih\\,2)" "$tempavi" &
@@ -945,8 +946,8 @@ record() {
         # gifski --fps 15 --quiet -o $outfile $tempframe*.png
     # else
         temppalette=$(mktemp $TMPDIR/outXXXXXXXXXX.png)
-        ffmpeg -v $ffmpeg_loglevel -i "$tempavi" -vf "fps=15,palettegen=stats_mode=full" -y $temppalette
-        ffmpeg -v $ffmpeg_loglevel -i "$tempavi" -i "$temppalette" -lavfi "fps=15 [x]; [x][1:v] paletteuse=dither=sierra2_4a" -y $outfile
+        ffmpeg -v $ffmpeg_loglevel -i "$tempavi" -vf "fps=$RECORD_FRAMERATE,palettegen=stats_mode=full" -y $temppalette
+        ffmpeg -v $ffmpeg_loglevel -i "$tempavi" -i "$temppalette" -lavfi "fps=$RECORD_FRAMERATE [x]; [x][1:v] paletteuse=dither=sierra2_4a" -y $outfile
     # fi
     if saveable; then
         owo_notify "Saved to $outfile"
