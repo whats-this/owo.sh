@@ -786,17 +786,27 @@ upload() {
     fi
 }
 
-screenshot() {
-    if [ "$SCREENSHOTS_DIR" ]; then
+saveable() {
+    [ "$SCREENSHOTS_DIR" ]
+}
+
+ensure_outfile() {
+    if saveable; then
+        debug "outfile is saveable"
         if [ ! -d "$SCREENSHOTS_DIR" ]; then
+            debug "SCREENSHOTS_DIR doesn't exist, proceeding to create it"
             mkdir -p $SCREENSHOTS_DIR
         fi
         # TODO: is this date supported on macOS?
-        local outfile=$SCREENSHOTS_DIR/$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+        echo "$SCREENSHOTS_DIR/$(date -u +"%Y-%m-%dT%H:%M:%SZ").$1"
     else
-        local outfile=$(mktemp $TMPDIR/outXXXXXXX.png)
+        debug "outfile is temporary"
+        mktemp "$TMPDIR/outXXXXXXX.$1"
     fi
+}
 
+screenshot() {
+    local outfile="$(ensure_outfile png)"
     owo_notify "Select an area to screenshot, ESC to cancel"
 
     _screenshot_cleanup() {
@@ -826,7 +836,7 @@ screenshot() {
         fail "missing maim on linux, please install it using your package manager of choice"
     fi
 
-    if [ "$SCREENSHOTS_DIR" ]; then
+    if saveable; then
         owo_notify "Saved to $outfile"
     fi
     
@@ -853,7 +863,7 @@ record() {
     local tempavi=$(mktemp $TMPDIR/outXXXXXXXXXX.avi)
     local temppalette
     local tempframe
-    local tempgif=$(mktemp $TMPDIR/outXXXXXXXXXX.gif)
+    local outfile="$(ensure_outfile gif)"
 
     _record_cleanup() {
         debug "cleaning up after record"
@@ -869,15 +879,17 @@ record() {
             debug "rm -f $3*.png"
             rm -f $3*.png
         fi
-        debug "rm -f $4"
-        rm -f $4
+        if ! saveable; then
+            debug "rm -f $4"
+            rm -f $4
+        fi
     }
     _record_sigint() {
         owo_notify "Stopping screen recorder..."
         debug "stopping gif encoder"
         kill -INT $(cat $HOME/.config/owo/gif.pid)
     }
-    trap_add "_record_cleanup $tempavi $temppalette $tempframe $tempgif" EXIT
+    trap_add "_record_cleanup \"$tempavi\" \"$temppalette\" \"$tempframe\" \"$outfile\"" EXIT
     trap_add _record_sigint SIGINT
 
     touch $HOME/.config/owo/gif.pid
@@ -916,14 +928,17 @@ record() {
     # if command -v gifski > /dev/null; then
         # tempframe=$(mktemp /tmp/frameXXXXXXXXXX)
         # ffmpeg -v warning -i $tempavi -r 15 -f image2 $tempframe%04d.png
-        # gifski --fps 15 --quiet -o $tempgif $tempframe*.png
+        # gifski --fps 15 --quiet -o $outfile $tempframe*.png
     # else
         temppalette=$(mktemp $TMPDIR/outXXXXXXXXXX.png)
         ffmpeg -v warning -i "$tempavi" -vf "fps=15,palettegen=stats_mode=full" -y $temppalette
-        ffmpeg -v warning -i "$tempavi" -i "$temppalette" -lavfi "fps=15 [x]; [x][1:v] paletteuse=dither=sierra2_4a" -y $tempgif
+        ffmpeg -v warning -i "$tempavi" -i "$temppalette" -lavfi "fps=15 [x]; [x][1:v] paletteuse=dither=sierra2_4a" -y $outfile
     # fi
+    if saveable; then
+        owo_notify "Saved to $outfile"
+    fi
 
-    upload $tempgif
+    upload $outfile
 }
 
 shorten() {
