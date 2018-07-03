@@ -23,7 +23,8 @@ URL_REGEX='(https?|ftp|file)://[-A-Za-z0-9\+&@#/%?=~_|!:,.;]*[-A-Za-z0-9\+&@#/%=
 API_BASE="https://api.awau.moe"
 
 # CLI Variables #
-VERBOSE=${OWO_VERBOSE:-}
+OWO_VERBOSE=$([ "$OWO_VERBOSE" ] && echo 1 || echo 0)
+VERBOSE=${OWO_VERBOSE:-0}
 COLORS=${OWO_COLORS:-1}
 NOTIFY=${OWO_NOTIFY:-}
 COPY_CLIPBOARD=${OWO_COPY_CLIPBOARD:-}
@@ -1028,9 +1029,9 @@ warn() {
 }
 
 debug() {
-    if [[ $VERBOSE  ]] && [[ $COLORS ]]; then
+    if [[ $VERBOSE -gt 0 ]] && [[ $COLORS ]]; then
         echoerr -e "\e[34mdebug\e[39m: $@"
-    elif [[ $VERBOSE ]]; then
+    elif [[ $VERBOSE -gt 0 ]]; then
         echoerr -e "debug: $@"
     fi
 }
@@ -1068,7 +1069,7 @@ while getopts_long :vhu:cfsrl: opt \
     "" "$@"
 do
     case "$opt" in
-        v|verbose ) VERBOSE=1 ;;
+        v|verbose ) VERBOSE=$((VERBOSE+1)) ;;
         version ) version; exit 0 ;;
         dry-run ) DRY_RUN=1 ;;
         h|help ) usage; exit 0 ;;
