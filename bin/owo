@@ -851,6 +851,17 @@ record() {
         fail "gif recording is not supported on your platform"
     fi
 
+    local ffmpeg_loglevel
+    case "$VERBOSE" in
+        0 ) ffmpeg_loglevel="warning" ;;
+        1 ) ffmpeg_loglevel="info" ;;
+        2 ) ffmpeg_loglevel="verbose" ;;
+        3 ) ffmpeg_loglevel="debug" ;;
+        * ) ffmpeg_loglevel="trace" ;;
+    esac
+
+    debug "ffmpeg_loglevel=$ffmpeg_loglevel"
+
     # TODO: xdg
     if [[ -f $HOME/.config/owo/gif.pid ]]; then
         local pid=$(cat $HOME/.config/owo/gif.pid)
@@ -914,7 +925,7 @@ record() {
 
     debug "going to start recording"
     owo_notify "Recording..."
-    ffmpeg -loglevel warning -y -f x11grab -show_region 1 -framerate 15 \
+    ffmpeg -loglevel $ffmpeg_loglevel -y -f x11grab -show_region 1 -framerate 15 \
         -draw_mouse "$drawmouse" \
         -s "$W"x"$H" -i :0.0+"$X","$Y" -codec:v huffyuv   \
         -vf crop="iw-mod(iw\\,2):ih-mod(ih\\,2)" "$tempavi" &
@@ -934,8 +945,8 @@ record() {
         # gifski --fps 15 --quiet -o $outfile $tempframe*.png
     # else
         temppalette=$(mktemp $TMPDIR/outXXXXXXXXXX.png)
-        ffmpeg -v warning -i "$tempavi" -vf "fps=15,palettegen=stats_mode=full" -y $temppalette
-        ffmpeg -v warning -i "$tempavi" -i "$temppalette" -lavfi "fps=15 [x]; [x][1:v] paletteuse=dither=sierra2_4a" -y $outfile
+        ffmpeg -v $ffmpeg_loglevel -i "$tempavi" -vf "fps=15,palettegen=stats_mode=full" -y $temppalette
+        ffmpeg -v $ffmpeg_loglevel -i "$tempavi" -i "$temppalette" -lavfi "fps=15 [x]; [x][1:v] paletteuse=dither=sierra2_4a" -y $outfile
     # fi
     if saveable; then
         owo_notify "Saved to $outfile"
