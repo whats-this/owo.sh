@@ -905,8 +905,10 @@ record() {
         -vf crop="iw-mod(iw\\,2):ih-mod(ih\\,2)" "$tempavi" &
 
     local pid="$!"
+    debug "pid=$!"
     echo "$pid" > $HOME/.config/owo/gif.pid
-    wait "$pid"
+    wait "$pid" && local rc=$? || local rc=$?
+    debug "x11grab done with $rc, proceeding to encode"
 
     # TODO: non-gif formats maybe
     # TODO: should we enable gifski by default?
