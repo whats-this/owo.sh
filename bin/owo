@@ -811,8 +811,10 @@ screenshot() {
 
     _screenshot_cleanup() {
         debug "cleaning up after screenshot"
-        debug "rm -f $1"
-        rm -f $1
+        if ! saveable; then
+            debug "rm -f $1"
+            rm -f $1
+        fi
     }
     trap_add "_screenshot_cleanup $outfile" EXIT
 
