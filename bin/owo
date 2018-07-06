@@ -1017,6 +1017,7 @@ usage() {
     echoerr " -c   --[no-]clipboard  copy [or not] output to clipboard"
     echoerr "      --notify          enable notifications"
     echoerr "      --key <key>       key to authorize with"
+    echoerr "      --record-framerate set recording framerate"
     echoerr "      --domain <domain> domain to use for resulting uploads"
     echoerr "      --[no-]cursor     enable [or disable] cursor in screenshots"
     echoerr "      --screenshots-dir <directory> permanently save screenshots, empty to disable, will be created if doesn't exist"
@@ -1081,6 +1082,7 @@ while getopts_long :vhu:cfsrl: opt \
     no-colors 0 \
     notify 0 \
     key 1 \
+    record-framerate 1 \
     domain 1 \
     upload 1 \
     clipboard 0 \
@@ -1105,6 +1107,7 @@ do
         no-colors ) COLORS=0 ;;
         notify ) NOTIFY=1 ;;
         key ) KEY="$OPTLARG" ;;
+        record-framerate ) RECORD_FRAMERATE="$OPTLARG" ;;
         domain ) DOMAIN="$OPTLARG" ;;
         u|upload ) UPLOAD+=("$OPTLARG") ;;
         c|clipboard ) COPY_CLIPBOARD=1 ;;
