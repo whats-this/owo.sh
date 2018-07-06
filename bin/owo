@@ -1006,19 +1006,19 @@ usage() {
     echoerr " -v   --verbose         enable verbose logging"
     echoerr "      --version         show version information"
     echoerr "      --dry-run         do not actually upload"
-    echoerr "      --no-colors       disable ascii coloring"
+    echoerr "      --[no-]colors     enable [or disable] ascii coloring"
     echoerr " -l   --shorten <link>  shorten a link"
     echoerr " -u   --upload <file>   upload a file, repeatable"
     echoerr " -s   --screenshot      select and screenshot"
     echoerr " -r   --record          record screen"
-    echoerr "      --fullscreen      enable fullscreen screenshots, use with -s or -r"
+    echoerr "      --[no-]fullscreen enable [or disable] fullscreen screenshots, use with -s or -r"
     echoerr ""
     echoerr "configuration overrides: these flags take precedence over config file"
-    echoerr " -c   --clipboard       copy output to clipboard"
+    echoerr " -c   --[no-]clipboard  copy [or not] output to clipboard"
     echoerr "      --notify          enable notifications"
     echoerr "      --key <key>       key to authorize with"
     echoerr "      --domain <domain> domain to use for resulting uploads"
-    echoerr "      --no-cursor       disable cursor in screenshots"
+    echoerr "      --[no-]cursor     enable [or disable] cursor in screenshots"
     echoerr "      --screenshots-dir <directory> permanently save screenshots, empty to disable, will be created if doesn't exist"
     echoerr "      --record-format   recorder format"
 }
@@ -1077,14 +1077,18 @@ while getopts_long :vhu:cfsrl: opt \
     version 0 \
     dry-run 0 \
     help 0 \
+    colors 0 \
     no-colors 0 \
     notify 0 \
     key 1 \
     domain 1 \
     upload 1 \
     clipboard 0 \
+    no-clipboard 0 \
     fullscreen 0 \
+    no-fullscreen 0 \
     screenshot 0 \
+    cursor 0 \
     no-cursor 0 \
     record 0 \
     shorten 1 \
@@ -1097,14 +1101,18 @@ do
         version ) version; exit 0 ;;
         dry-run ) DRY_RUN=1 ;;
         h|help ) usage; exit 0 ;;
+        colors ) COLORS=1 ;;
         no-colors ) COLORS=0 ;;
         notify ) NOTIFY=1 ;;
         key ) KEY="$OPTLARG" ;;
         domain ) DOMAIN="$OPTLARG" ;;
         u|upload ) UPLOAD+=("$OPTLARG") ;;
         c|clipboard ) COPY_CLIPBOARD=1 ;;
+        no-clipboard ) COPY_CLIPBOARD=0 ;;
         f|fullscreen ) FULLSCREEN_SCREENSHOT=1 ;;
+        no-fullscreen ) FULLSCREEN_SCREENSHOT=0 ;;
         s|screenshot ) SCREENSHOT=1 ;;
+        cursor ) NO_CURSOR=0 ;;
         no-cursor ) NO_CURSOR=1 ;;
         r|record ) RECORD=1 ;;
         l|shorten ) SHORTEN="$OPTLARG" ;;
