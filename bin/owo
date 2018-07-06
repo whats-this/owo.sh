@@ -31,7 +31,7 @@ COPY_CLIPBOARD=${OWO_COPY_CLIPBOARD:-0}
 SCREENSHOTS_DIR=${OWO_SCREENSHOTS_DIR:-}
 DOMAIN=${OWO_DOMAIN:-https://owo.whats-th.is/}
 FULLSCREEN_SCREENSHOT=${OWO_FULLSCREEN_SCREENSHOT:-0}
-NO_CURSOR=${OWO_NO_CURSOR:-0}
+CURSOR=${OWO_CURSOR:-1}
 KEY=${OWO_KEY:-}
 RECORD_FRAMERATE=${OWO_RECORD_FRAMERATE:-15}
 
@@ -831,7 +831,7 @@ screenshot() {
         if ! is "$FULLSCREEN_SCREENSHOT"; then
             cmdline="$cmdline -s"
         fi
-        if is "$NO_CURSOR"; then
+        if ! is "$CURSOR"; then
             cmdline="$cmdline --hidecursor"
         fi
         cmdline="$cmdline $outfile"
@@ -918,7 +918,7 @@ record() {
         exit 1
     fi
 
-    if ! is "$NO_CURSOR"; then
+    if is "$CURSOR"; then
         local drawmouse="1"
     else
         local drawmouse="0"
@@ -1112,8 +1112,8 @@ do
         f|fullscreen ) FULLSCREEN_SCREENSHOT=1 ;;
         no-fullscreen ) FULLSCREEN_SCREENSHOT=0 ;;
         s|screenshot ) SCREENSHOT=1 ;;
-        cursor ) NO_CURSOR=0 ;;
-        no-cursor ) NO_CURSOR=1 ;;
+        cursor ) CURSOR=0 ;;
+        no-cursor ) CURSOR=1 ;;
         r|record ) RECORD=1 ;;
         l|shorten ) SHORTEN="$OPTLARG" ;;
         screenshots-dir ) SCREENSHOTS_DIR="$OPTLARG" ;;
@@ -1133,7 +1133,7 @@ debug "COLORS=$COLORS"
 debug "COPY_CLIPBOARD=$COPY_CLIPBOARD"
 debug "DOMAIN=$DOMAIN"
 debug "FULLSCREEN_SCREENSHOT=$FULLSCREEN_SCREENSHOT"
-debug "NO_CURSOR=$NO_CURSOR"
+debug "CURSOR=$CURSOR"
 debug "KEY=$KEY"
 debug "tasks:"
 debug "UPLOAD=$UPLOAD"
