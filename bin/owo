@@ -1128,11 +1128,16 @@ shift "$(($OPTLIND - 1))"
 
 TMPDIR=$(tempdir)
 DOMAIN=$(prepare_domain "$DOMAIN")
+if ! [ -t 1 ]; then
+    # stdout not a tty, force disable colors
+    COLORS=0
+fi
 
 debug "PREFIX=$PREFIX"
 debug "after getopts"
 debug "VERBOSE=$VERBOSE"
 debug "COLORS=$COLORS"
+debug "NOTIFY=$NOTIFY"
 debug "COPY_CLIPBOARD=$COPY_CLIPBOARD"
 debug "DOMAIN=$DOMAIN"
 debug "FULLSCREEN_SCREENSHOT=$FULLSCREEN_SCREENSHOT"
