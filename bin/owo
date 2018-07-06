@@ -1021,7 +1021,7 @@ usage() {
     echoerr "      --domain <domain> domain to use for resulting uploads"
     echoerr "      --[no-]cursor     enable [or disable] cursor in screenshots"
     echoerr "      --screenshots-dir <directory> permanently save screenshots, empty to disable, will be created if doesn't exist"
-    echoerr "      --record-format   recorder format"
+    # echoerr "      --record-format   recorder format"
 }
 
 version() {
