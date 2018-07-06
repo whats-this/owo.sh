@@ -26,12 +26,12 @@ API_BASE="https://api.awau.moe"
 OWO_VERBOSE=$([ "$OWO_VERBOSE" ] && echo 1 || echo 0)
 VERBOSE=${OWO_VERBOSE:-0}
 COLORS=${OWO_COLORS:-1}
-NOTIFY=${OWO_NOTIFY:-}
-COPY_CLIPBOARD=${OWO_COPY_CLIPBOARD:-}
+NOTIFY=${OWO_NOTIFY:-0}
+COPY_CLIPBOARD=${OWO_COPY_CLIPBOARD:-0}
 SCREENSHOTS_DIR=${OWO_SCREENSHOTS_DIR:-}
 DOMAIN=${OWO_DOMAIN:-https://owo.whats-th.is/}
-FULLSCREEN_SCREENSHOT=${OWO_FULLSCREEN_SCREENSHOT:-}
-NO_CURSOR=${OWO_NO_CURSOR:-}
+FULLSCREEN_SCREENSHOT=${OWO_FULLSCREEN_SCREENSHOT:-0}
+NO_CURSOR=${OWO_NO_CURSOR:-0}
 KEY=${OWO_KEY:-}
 RECORD_FRAMERATE=${OWO_RECORD_FRAMERATE:-15}
 
@@ -652,7 +652,7 @@ notify() {
 }
 
 owo_notify() {
-    if [ "$NOTIFY" ]; then
+    if is "$NOTIFY"; then
         notify -t 'owo.whats-th.is' -m "$1" -i "$PREFIX/share/icons/default/500x500/apps/owo.png" -e 5
     fi
 }
@@ -780,7 +780,7 @@ upload() {
         parsefilesjson $jsontemp
         local newlinks=( $(prepare_file_links $links) )
         echo $newlinks
-        if [ "$COPY_CLIPBOARD" ]; then
+        if is "$COPY_CLIPBOARD"; then
             clipboard ${newlinks[0]}
         fi
     else
@@ -821,17 +821,17 @@ screenshot() {
     trap_add "_screenshot_cleanup $outfile" EXIT
 
     if is_mac; then
-        if [ "$FULLSCREEN_SCREENSHOT" ]; then
+        if is "$FULLSCREEN_SCREENSHOT"; then
             screencapture -o "$outfile"
         else
             screencapture -o -i "$outfile"
         fi
     elif command -v maim > /dev/null; then
         local cmdline="maim --quiet"
-        if [ -z "$FULLSCREEN_SCREENSHOT" ]; then
+        if ! is "$FULLSCREEN_SCREENSHOT"; then
             cmdline="$cmdline -s"
         fi
-        if [ "$NO_CURSOR" ]; then
+        if is "$NO_CURSOR"; then
             cmdline="$cmdline --hidecursor"
         fi
         cmdline="$cmdline $outfile"
@@ -918,7 +918,7 @@ record() {
         exit 1
     fi
 
-    if [ -z "$NO_CURSOR" ]; then
+    if ! is "$NO_CURSOR"; then
         local drawmouse="1"
     else
         local drawmouse="0"
@@ -970,7 +970,7 @@ shorten() {
             local code=$(echo "$result" | sed 's/.*oe\///')
             echo $code
             local result="$DOMAIN$code"
-            if [ "$COPY_CLIPBOARD" ]; then
+            if is "$COPY_CLIPBOARD"; then
                 clipboard "$result"
             fi
             echo "$result"
@@ -985,6 +985,18 @@ shorten() {
 # CLI #
 echoerr() {
     >&2 echo "$@"
+}
+
+is() {
+    if test -z "$1"; then
+        return 1
+    elif [ "$1" == 0 ]; then
+        return 1
+    elif [ "$1" == 0.0 ]; then
+        return 1
+    else
+        return 0
+    fi
 }
 
 usage() {
@@ -1020,7 +1032,7 @@ version() {
 }
 
 logfail() {
-    if [[ $COLORS ]]; then
+    if is "$COLORS"; then
         echoerr -e "\e[31mfail\e[39m: $@"
     else
         echoerr -e "fail: $@"
@@ -1033,7 +1045,7 @@ fail() {
 }
 
 warn() {
-    if [[ $COLORS ]]; then
+    if is "$COLORS"; then
         echoerr -e "\e[93mwarn\e[39m: $@"
     else
         echoerr -e "warn: $@"
@@ -1041,7 +1053,7 @@ warn() {
 }
 
 debug() {
-    if [[ $VERBOSE -gt 0 ]] && [[ $COLORS ]]; then
+    if [[ $VERBOSE -gt 0 ]] && is "$COLORS"; then
         echoerr -e "\e[34mdebug\e[39m: $@"
     elif [[ $VERBOSE -gt 0 ]]; then
         echoerr -e "debug: $@"
@@ -1085,7 +1097,7 @@ do
         version ) version; exit 0 ;;
         dry-run ) DRY_RUN=1 ;;
         h|help ) usage; exit 0 ;;
-        no-colors ) COLORS= ;;
+        no-colors ) COLORS=0 ;;
         notify ) NOTIFY=1 ;;
         key ) KEY="$OPTLARG" ;;
         domain ) DOMAIN="$OPTLARG" ;;
