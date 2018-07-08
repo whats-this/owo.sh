@@ -1,5 +1,6 @@
-PREFIX ?= /usr
+PREFIX ?= /usr/local
 
+.PHONY: install
 install: install-bin install-man install-icons install-conf
 
 install-bin: bin/owo
