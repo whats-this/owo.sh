@@ -928,7 +928,7 @@ record() {
     owo_notify "Recording..."
     ffmpeg -loglevel $ffmpeg_loglevel -y -f x11grab -show_region 1 -framerate $RECORD_FRAMERATE \
         -draw_mouse "$drawmouse" \
-        -s "$W"x"$H" -i :0.0+"$X","$Y" -codec:v huffyuv   \
+        -s "$W"x"$H" -i "$DISPLAY".0+"$X","$Y" -codec:v huffyuv   \
         -vf crop="iw-mod(iw\\,2):ih-mod(ih\\,2)" "$tempavi" &
 
     local pid="$!"
