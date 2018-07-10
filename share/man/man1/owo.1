@@ -63,6 +63,28 @@ Upload file:
 Shorten link:
 .B owo
 \-l 'https://duckduckgo.com'
+.TP
+Shuffle a list of domains and pass one to owo (assumes a list of domains in domains.txt, separated by newline):
+.B shuf
+\-n 1 < domains.txt |
+.B xargs
+\-I {}
+.B owo
+\-\-domain {} --screenshot
+.TP
+The above is also achievable using the config file, as all it is is a sourced script:
+.B echo
+"DOMAIN=$(shuf \-n 1 /absolute/path/to/domains.txt | xargs)" >> domains.txt
+.TP
+If you have a special clipboard manager installed, you can script copying like so:
+.B owo
+\-\-screenshot \-\-no\-clipboard |
+.B your-super-cool-clip
+\-
+.TP
+Toggle verbosity (it contains your key so be careful with the output!):
+.B owo
+\-v
 .PP
 .SH EXIT STATUS
 owo returns a zero exit status if it succeeds in all given tasks.
