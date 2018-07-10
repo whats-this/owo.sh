@@ -909,7 +909,7 @@ record() {
 
     touch $HOME/.config/owo/gif.pid
 
-    owo_notify "Select an area to begin recording, ESC to cancel"
+    owo_notify "Select an area to begin recording, ESC to cancel selection"
     debug "reading slop"
     # dunno why this exits with 1
     read -r X Y W H G ID < <(slop -f "%x %y %w %h %g %i" -q) || true
@@ -935,7 +935,14 @@ record() {
     debug "pid=$!"
     echo "$pid" > $HOME/.config/owo/gif.pid
     wait "$pid" && local rc=$? || local rc=$?
+    if (( rc != 130 )); then
+        fail "x11grab failed with $rc"
+    fi
     debug "x11grab done with $rc, proceeding to encode"
+
+    if ! [ -s "$tempavi" ]; then
+        fail "x11grab produced empty file, maybe dropped frames?"
+    fi
 
     # TODO: non-gif formats maybe
     # TODO: should we enable gifski by default?
