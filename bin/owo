@@ -653,7 +653,7 @@ notify() {
 
 owo_notify() {
     if is "$NOTIFY"; then
-        notify -t 'owo.whats-th.is' -m "$1" -i "$PREFIX/share/icons/default/500x500/apps/owo.png" -e 5
+        notify -t 'owo.whats-th.is' -m "$1" -i "$PREFIX/share/icons/default/500x500/apps/owo.png" -e 10
     fi
 }
 
