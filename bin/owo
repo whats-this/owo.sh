@@ -1024,7 +1024,7 @@ usage() {
     echoerr "      --[no-]cursor     enable [or disable] cursor in screenshots"
     echoerr "      --[no-]notify     enable [or disable] notifications"
     echoerr "      --key <key>       key to authorize with"
-    echoerr "      --record-framerate set recording framerate"
+    echoerr "      --record-framerate <framerate> set recording framerate"
     echoerr "      --domain <domain> domain to use for resulting uploads"
     echoerr "      --screenshots-dir <directory> permanently save screenshots, empty to disable, will be created if doesn't exist"
     # echoerr "      --record-format   recorder format"

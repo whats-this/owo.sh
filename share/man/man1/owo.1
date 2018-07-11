@@ -7,51 +7,56 @@ owo \- make use of whats-th.is file upload and link shortening services
 .SH DESCRIPTION
 This little tool helps you upload files and shorten links via awau.moe.
 .SH OPTIONS
-.TP
-\fB\-h\fR, \fB\-\-help\fR
+.TP \fB\-h\fR, \fB\-\-help\fR
 display a short help text
 .TP
 \fB\-v\fR, \fB\-\-verbose\fR
 enable verbose logging
 .TP
 \fB\-\-version\fR
-show version and copyright information
+show version information
 .TP
-\fB\-\-dry-run\fR
+\fB\-\-dry\-run\fR
 do not actually upload
 .TP
-\fB\-\-no\-colors\fR
-disable ascii coloring
+\fB\-\-upload\fR file
+upload a file, repeatable
 .TP
-\fB\-l\fR, \fB\-\-shorten\fR link
-shorten a link passed as string 'link'
+\fB\-\-shorten\fR link
+shorten a link
 .TP
-\fB\-u\fR, \fB\-\-upload\fR file
-upload a file passed as string 'file', this option can be repeated
-.TP
-\fB\-s\fR, \fB\-\-screenshot\fR
+\fB\-\-screenshot\fR
 select and screenshot
 .TP
-\fB\-r\fR, \fB\-\-record\fR
-record screen
+\fB\-\-record\fR
+record screen or stop recording
 .TP
-\fB\-\-fullscreen\fR
-enable fullscreen screenshots, use with -s or -r
+\fB\-\-[no\-]fullscreen\fR
+enable [or disable] fullscreen screenshots, use with \-s or \-r
+.TP
+\fB\-\-[no\-]clipboard\fR
+copy [or not] output to clipboard
+.TP
+\fB\-\-[no\-]colors\fR
+enable [or disable] ascii coloring
+.TP
+\fB\-\-[no\-]cursor\fR
+enable [or disable] cursor in screenshots
+.TP
+\fB\-\-[no\-]notify\fR
+enable [or disable] notifications
 .TP
 \fB\-\-key\fR key
-key to authorize with, passed as string 'key'
+key to authorize with
+.TP
+\fB\-\-record\-framerate\fR framerate
+key to authorize with
 .TP
 \fB\-\-domain\fR domain
-domain to use for resulting uploads, passed as string 'domain'
+domain to use for resulting uploads
 .TP
-\fB\-\-no\-cursor\fR
-disable cursor in screenshots
-.TP
-\fB\-\-screenshots\-dir\fR dir
-screenshots directory, empty to disable, will be created if doesn't exist, passed as string 'dir'
-.TP
-\fB\-\-record\-format\fR
-recorder format
+\fB\-\-screenshots\-dir\fR directory
+permanently save screenshots, empty to disable, will be created if it doesn't exist
 
 .SH EXAMPLES
 .TP
