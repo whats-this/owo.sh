@@ -1022,7 +1022,7 @@ usage() {
     echoerr ""
     echoerr "configuration overrides: these flags take precedence over config file"
     echoerr " -c   --[no-]clipboard  copy [or not] output to clipboard"
-    echoerr "      --notify          enable notifications"
+    echoerr "      --[no-]notify     enable notifications"
     echoerr "      --key <key>       key to authorize with"
     echoerr "      --record-framerate set recording framerate"
     echoerr "      --domain <domain> domain to use for resulting uploads"
@@ -1088,6 +1088,7 @@ while getopts_long :vhu:cfsrl: opt \
     colors 0 \
     no-colors 0 \
     notify 0 \
+    no-notify 0 \
     key 1 \
     record-framerate 1 \
     domain 1 \
@@ -1113,6 +1114,7 @@ do
         colors ) COLORS=1 ;;
         no-colors ) COLORS=0 ;;
         notify ) NOTIFY=1 ;;
+        no-notify ) NOTIFY=0 ;;
         key ) KEY="$OPTLARG" ;;
         record-framerate ) RECORD_FRAMERATE="$OPTLARG" ;;
         domain ) DOMAIN="$OPTLARG" ;;
