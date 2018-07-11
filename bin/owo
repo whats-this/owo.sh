@@ -844,7 +844,10 @@ screenshot() {
         owo_notify "Saved to $outfile"
     fi
     
-    upload $outfile
+    local link
+    read -r -a link < <(upload $outfile)
+
+    owo_notify "Uploaded to ${link[*]}"
 }
 
 record() {
