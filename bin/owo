@@ -530,6 +530,7 @@ declare -f -t trap_add
 tempdir() {
     ([ "$TMPDIR" ] && echo "$TMPDIR") || ([ "$TMP" ] && echo "$TMP") || ([ "$TEMP" ] && echo "$TEMP") || echo "/tmp"
 }
+TMPDIR="$(tempdir)"
 
 prefix() {
     # TODO: this is fragile and not bullet-proof
@@ -1157,14 +1158,15 @@ do
 done
 shift "$(($OPTLIND - 1))"
 
-TMPDIR=$(tempdir)
 DOMAIN=$(prepare_domain "$DOMAIN")
 if ! [ -t 2 ]; then
     # stdout not a tty, force disable colors
     COLORS=0
 fi
 
+debug "TMPDIR=$TMPDIR"
 debug "PREFIX=$PREFIX"
+debug "RUNTIMEDIR=$RUNTIMEDIR"
 debug "after getopts"
 debug "VERBOSE=$VERBOSE"
 debug "COLORS=$COLORS"
