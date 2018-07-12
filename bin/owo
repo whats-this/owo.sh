@@ -778,8 +778,10 @@ upload() {
     local status="$(eval $cmdline)"
     if (( 200 <= $status && $status <= 299 )); then
         parsefilesjson $jsontemp
+        debug "parsefilesjson gave us: ${links[*]}"
         local newlinks=( $(prepare_file_links $links) )
-        echo $newlinks
+        debug "prepared links: ${newlinks[*]}"
+        echo "${newlinks[@]}"
         if is "$COPY_CLIPBOARD"; then
             clipboard ${newlinks[0]}
         fi
@@ -848,6 +850,8 @@ screenshot() {
     read -r -a link < <(upload $outfile)
 
     owo_notify "Uploaded to ${link[*]}"
+
+    echo "${link[@]}"
 }
 
 record() {
