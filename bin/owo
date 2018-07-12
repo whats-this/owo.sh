@@ -543,7 +543,19 @@ prefix() {
     fi
 }
 
-PREFIX=$(prefix)
+PREFIX="$(prefix)"
+
+runtimedir() {
+    if [ "$XDG_RUNTIME_DIR" ]; then
+        echo "$XDG_RUNTIME_DIR"
+    elif [ -d "/run" ]; then
+        echo "/run/user/$(id -u)"
+    else
+        echo "$TMPDIR"
+    fi
+}
+
+RUNTIMEDIR="$(runtimedir)"
 
 _IS_MAC=
 is_mac() {
@@ -870,15 +882,14 @@ record() {
 
     debug "ffmpeg_loglevel=$ffmpeg_loglevel"
 
-    # TODO: xdg
-    if [[ -f $HOME/.config/owo/gif.pid ]]; then
-        local pid=$(cat $HOME/.config/owo/gif.pid)
+    if [[ -f $RUNTIMEDIR/oworec.pid ]]; then
+        local pid=$(cat $RUNTIMEDIR/oworec.pid)
         if kill -0 $pid 2> /dev/null; then
             debug "pid exists, stopping gif recorder"
-            kill -INT $(cat $HOME/.config/owo/gif.pid)
+            kill -INT $(cat $RUNTIMEDIR/oworec.pid)
             exit 0
         else
-            rm -f $HOME/.config/owo/gif.pid
+            rm -f $RUNTIMEDIR/oworec.pid
         fi
     fi
 
@@ -889,8 +900,8 @@ record() {
 
     _record_cleanup() {
         debug "cleaning up after record"
-        debug "rm -f $HOME/.config/owo/gif.pid"
-        rm -f $HOME/.config/owo/gif.pid
+        debug "rm -f $RUNTIMEDIR/oworec.pid"
+        rm -f $RUNTIMEDIR/oworec.pid
         debug "rm -f $1"
         rm -f $1
         if [ "$2" ]; then
@@ -909,12 +920,12 @@ record() {
     _record_sigint() {
         owo_notify "Stopping screen recorder..."
         debug "stopping gif encoder"
-        kill -INT $(cat $HOME/.config/owo/gif.pid)
+        kill -INT $(cat $RUNTIMEDIR/oworec.pid)
     }
     trap_add "_record_cleanup \"$tempavi\" \"$temppalette\" \"$tempframe\" \"$outfile\"" EXIT
     trap_add _record_sigint SIGINT
 
-    touch $HOME/.config/owo/gif.pid
+    touch $RUNTIMEDIR/oworec.pid
 
     owo_notify "Select an area to begin recording, ESC to cancel selection"
     debug "reading slop"
@@ -940,9 +951,9 @@ record() {
 
     local pid="$!"
     debug "pid=$!"
-    echo "$pid" > $HOME/.config/owo/gif.pid
+    echo "$pid" > $RUNTIMEDIR/oworec.pid
     wait "$pid" && local rc=$? || local rc=$?
-    if (( rc != 130 )); then
+    if (( rc != 130 && rc != 255 )); then
         fail "x11grab failed with $rc"
     fi
     debug "x11grab done with $rc, proceeding to encode"
