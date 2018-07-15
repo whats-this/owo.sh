@@ -23,9 +23,10 @@ Thank you to [jomo](https://github.com/jomo/) and his script [jomo/imgur-screens
 ## Installation
 
 1. Once you install the dependencies above, simply run the command
-```shell
 
-curl -L https://owo.sh | bash
+
+```shell
+curl -L  https://owo.codes/whats-this/owo.sh/raw/master/supersetup.sh | bash
 ```
 in your terminal.
 ## Usage
