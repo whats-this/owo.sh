@@ -1,0 +1,102 @@
+.TH owo 1  "June 26, 2018" "version 1.0.0" "USER COMMANDS"
+.SH NAME
+owo \- make use of whats-th.is file upload and link shortening services
+.SH SYNOPSIS
+.B owo
+[option...] [file...]
+.SH DESCRIPTION
+This little tool helps you upload files and shorten links via awau.moe.
+.SH OPTIONS
+.TP \fB\-h\fR, \fB\-\-help\fR
+display a short help text
+.TP
+\fB\-v\fR, \fB\-\-verbose\fR
+enable verbose logging
+.TP
+\fB\-\-version\fR
+show version information
+.TP
+\fB\-\-dry\-run\fR
+do not actually upload
+.TP
+\fB\-\-upload\fR file
+upload a file, repeatable
+.TP
+\fB\-\-shorten\fR link
+shorten a link
+.TP
+\fB\-\-screenshot\fR
+select and screenshot
+.TP
+\fB\-\-record\fR
+record screen or stop recording
+.TP
+\fB\-\-[no\-]fullscreen\fR
+enable [or disable] fullscreen screenshots, use with \-s or \-r
+.TP
+\fB\-\-[no\-]clipboard\fR
+copy [or not] output to clipboard
+.TP
+\fB\-\-[no\-]colors\fR
+enable [or disable] ascii coloring
+.TP
+\fB\-\-[no\-]cursor\fR
+enable [or disable] cursor in screenshots
+.TP
+\fB\-\-[no\-]notify\fR
+enable [or disable] notifications
+.TP
+\fB\-\-key\fR key
+key to authorize with
+.TP
+\fB\-\-record\-framerate\fR framerate
+frame rate for screen recording
+.TP
+\fB\-\-domain\fR domain
+domain to use for resulting uploads
+.TP
+\fB\-\-screenshots\-dir\fR directory
+permanently save screenshots, empty to disable, will be created if it doesn't exist
+
+.SH EXAMPLES
+.TP
+Upload file:
+.B owo
+\-u test.bin
+.PP
+.TP
+Shorten link:
+.B owo
+\-l 'https://duckduckgo.com'
+.TP
+Shuffle a list of domains and pass one to owo (assumes a list of domains in domains.txt, separated by newline):
+.B shuf
+\-n 1 < domains.txt |
+.B xargs
+\-I {}
+.B owo
+\-\-domain {} --screenshot
+.TP
+The above is also achievable using the config file, as all it is is a sourced script:
+.B echo
+"DOMAIN=$(shuf \-n 1 /absolute/path/to/domains.txt | xargs)" >> domains.txt
+.TP
+If you have a special clipboard manager installed, you can script copying like so:
+.B owo
+\-\-screenshot \-\-no\-clipboard |
+.B your-super-cool-clip
+\-
+.TP
+Toggle verbosity (it contains your key so be careful with the output!):
+.B owo
+\-v
+.PP
+.SH EXIT STATUS
+owo returns a zero exit status if it succeeds in all given tasks.
+Non zero is returned in case of failure, as script uses set -e.
+.SH AUTHOR
+OwO developers (devs (at) whats-th.is)
+.SH SEE ALSO
+curl(1)
+maim(1)
+slop(1)
