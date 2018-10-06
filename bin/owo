@@ -558,6 +558,11 @@ runtimedir() {
 
 RUNTIMEDIR="$(runtimedir)"
 
+_release_file() {
+    [ -f "/etc/lsb-release" ] && echo "/etc/lsb-release" && return 0
+    [ -f "/etc/os-release" ] && echo "/etc/os-release" && return 0
+}
+
 _IS_MAC=
 is_mac() {
     if [ -z "$_IS_MAC" ]; then
@@ -573,7 +578,7 @@ is_mac() {
 _IS_CHROMEOS=
 is_chromeos() {
     if [ -z "$_IS_CHROMEOS" ]; then
-        if cat /etc/lsb-release | grep -q -i chrome; then
+        if cat "$(_release_file)" | grep -q -i chrome; then
             _IS_CHROMEOS=0
         else
             _IS_CHROMEOS=1
@@ -1199,7 +1204,7 @@ fi
 debug "do the thing"
 # Do the thing
 if [ "$UPLOAD" ]; then
-    upload $UPLOAD
+    upload "$UPLOAD"
 elif [ "$SCREENSHOT" ]; then
     screenshot
 elif [ "$RECORD" ]; then
@@ -1212,7 +1217,7 @@ elif [ "$#" -eq 0 ]; then
     fi
     upload -
 else
-    upload $@
+    upload "$*"
 fi
 
 # vim: tabstop=4:shiftwidth=4:softtabstop=4:expandtab
