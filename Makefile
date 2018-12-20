@@ -9,12 +9,12 @@ install-bin: bin/owo
 
 install-man: share/man/man1/owo.1
 	mkdir -p $(PREFIX)/$(dir $<)
-	gzip -9nc $< > $(PREFIX)/$<
+	install -m 0644 $< > $(PREFIX)/$<
 
 install-icons: share/icons/default/500x500/apps/owo.png
 	mkdir -p $(PREFIX)/$(dir $<)
-	cp $< $(PREFIX)/$<
+	install -m 0655 $< $(PREFIX)/$<
 
 install-conf: share/owo/owo.conf
 	mkdir -p $(PREFIX)/$(dir $<)
-	cp $< $(PREFIX)/$<
+	install -m 0644 $< $(PREFIX)/$<
