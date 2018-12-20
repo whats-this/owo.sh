@@ -15,22 +15,24 @@ A shell script for uploading and shortening links to
 | libnotify/notify-send                             | **Linux**, **BSD** | Only required if notifications are enabled          |
 | [terminal-notifier][terminal-notifier Repository] | **macOS**          | Only required if notifications are enabled          |
 
+In short, on most systems, you'll need to install `curl`, `maim` and `jq`. If
+you plan on using any of the "advanced" features, refer to the table above.
+
 ### Additional notes
-On \*BSDs you'll need GNU/make (`gmake`) to install this script.
+On \*BSDs (including macOS), you'll need GNU/make (`gmake`) to install this
+script.
 
 ## Installation
 ### From source (recommended)
 1. `git clone https://owo.codes/whats-this/owo.sh.git owo.sh`
 2. `cd owo.sh`
 3. `git checkout REV` where `REV` is a release. Current latest is `v1.0.0`
-4. `sudo make install`, you can change prefix by doing `sudo make install
-   PREFIX=/usr`
+4. `sudo make install`. If you want to avoid use of `sudo`, you can install
+   script to the home of the current using by doing `make install
+   PREFIX=$HOME/.local/`
 
 ## Usage
 See `owo --help`
-
-## Using the Mac Workflow
-TODO
 
 ## FAQ
 **Screen recording on macOS?**<br/>
