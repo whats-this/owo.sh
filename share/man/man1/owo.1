@@ -5,6 +5,7 @@ owo \- make use of whats-th.is file upload and link shortening services
 .B owo
 [option...] [file...]
 .SH DESCRIPTION
+.PP
 This little tool helps you upload files and shorten links via awau.moe.
 .SH OPTIONS
 .TP \fB\-h\fR, \fB\-\-help\fR
@@ -57,6 +58,17 @@ domain to use for resulting uploads
 .TP
 \fB\-\-screenshots\-dir\fR directory
 permanently save screenshots, empty to disable, will be created if it doesn't exist
+
+.SH CONFIGURATION
+.PP
+.B
+owo
+can be configured using aforementioned options, the configuration file or the
+environment, in that order. The configuration file (which is a sourced shell
+script) is located at
+.I $XDG_CONFIG_HOME/owo/owo.conf
+or, if $XDG_CONFIG_HOME is not present, at
+.I $HOME/.config/owo/owo.conf
 
 .SH EXAMPLES
 .TP
