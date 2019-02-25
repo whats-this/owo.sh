@@ -34,7 +34,7 @@ FULLSCREEN_SCREENSHOT=${OWO_FULLSCREEN_SCREENSHOT:-0}
 CURSOR=${OWO_CURSOR:-1}
 KEY=${OWO_KEY:-}
 RECORD_FRAMERATE=${OWO_RECORD_FRAMERATE:-15}
-
+ASSOCIATED=${OWO_ASSOCIATED:-0}
 # Tasks #
 UPLOAD=( )
 SCREENSHOT=
@@ -743,7 +743,11 @@ prepare_file_links() {
 upload() {
     # TODO: posix-compat and tempdir
     local jsontemp=$(mktemp $TMPDIR/outXXXXXXX.json)
-    local apiurl="$API_BASE/upload/pomf?key=$KEY"
+    if [[ $ASSOCIATED = 1 ]]; then
+    	local apiurl="$API_BASE/upload/pomf/associated?key=$KEY"
+    else
+    	local apiurl="$API_BASE/upload/pomf?key=$KEY"
+    fi
     local cmdline="curl -s -w '%{http_code}' -o >(cat >&3 > $jsontemp) -H 'User-Agent: $USERAGENT' '$apiurl'"
     local mime
     local rc
@@ -1056,7 +1060,8 @@ usage() {
     echoerr "      --record-framerate <framerate> set recording framerate"
     echoerr "      --domain <domain> domain to use for resulting uploads"
     echoerr "      --screenshots-dir <directory> permanently save screenshots, empty to disable, will be created if doesn't exist"
-    # echoerr "      --record-format   recorder format"
+    echoerr "      --associated-uploads Associate your upload to your account in the database.
+  # echoerr "      --record-format   recorder format"
 }
 
 version() {
@@ -1132,6 +1137,7 @@ while getopts_long :vhu:cfsrl: opt \
     shorten 1 \
     screeenshots-dir 1 \
     record-format 1 \
+    associated-uploads 0 \
     "" "$@"
 do
     case "$opt" in
@@ -1157,6 +1163,7 @@ do
         r|record ) RECORD=1 ;;
         l|shorten ) SHORTEN="$OPTLARG" ;;
         screenshots-dir ) SCREENSHOTS_DIR="$OPTLARG" ;;
+        associated-uploads )  ASSOCIATED=1 ;;
         record-format ) fail "this option hasn't been implemented yet" ;;
         : ) logfail "$OPTLERR"; usage; exit 1 ;;
     esac
