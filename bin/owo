@@ -1060,8 +1060,8 @@ usage() {
     echoerr "      --record-framerate <framerate> set recording framerate"
     echoerr "      --domain <domain> domain to use for resulting uploads"
     echoerr "      --screenshots-dir <directory> permanently save screenshots, empty to disable, will be created if doesn't exist"
-    echoerr "      --associated-uploads Associate your upload to your account in the database.
-  # echoerr "      --record-format   recorder format"
+    echoerr "      --associated-uploads Associate your uploads to your account in the database. "
+    # echoerr "      --record-format   recorder format"
 }
 
 version() {
