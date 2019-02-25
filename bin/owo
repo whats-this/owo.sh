@@ -997,7 +997,11 @@ record() {
 }
 
 shorten() {
-    local apiurl="$API_BASE/shorten/polr?action=shorten"
+    if [[ $ASSOCIATED = "1" ]]; then
+    	local apiurl="$API_BASE/shorten/polr/associated?action=shorten"
+    else
+        local apiurl="$API_BASE/shorten/polr?action=shorten"
+    fi
     local url="$@"
     if [ "$url" = '-' ]; then
         debug "input is stdin"
