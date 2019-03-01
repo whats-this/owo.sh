@@ -1027,7 +1027,8 @@ shorten() {
 }
 
 filelist() {
-	local offset=0
+	local page="$@"
+	local offset=$(( page * 100 ))
 	local apiurl="$API_BASE/objects?key=$KEY&limit=100&offset=$offset"
 	local listout=$(curl -s -G "$apiurl" -H "User-Agent: $USERAGENT")
 	local filename=$(echo $listout | jq -r '.data | .[].key')
@@ -1047,8 +1048,8 @@ filedelete() {
 		local deleted_at=$(echo $result | jq -r '.data | .deleted_at')
 		echo "Done. $file deleted at $deleted_at"
 	else
-		# TODO: Give more detail here
-		echo "Deletion Failed."
+	        local error=$(echo $result | jq -r '.description')
+		echo "Deletion Failed. Message recieved: $error"
 	fi
 }
 		
@@ -1255,7 +1256,7 @@ elif [ "$RECORD" ]; then
 elif [ "$SHORTEN" ]; then
     shorten $SHORTEN
 elif [ "$FILELIST" ]; then
-    filelist
+    filelist "$*"
 elif [ "$FILEDELETE" ]; then
     filedelete "$*"
 elif [ "$#" -eq 0 ]; then
