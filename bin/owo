@@ -1026,6 +1026,32 @@ shorten() {
     fi
 }
 
+filelist() {
+	local offset=0
+	local apiurl="$API_BASE/objects?key=$KEY&limit=100&offset=$offset"
+	local listout=$(curl -s -G "$apiurl" -H "User-Agent: $USERAGENT")
+	local filename=$(echo $listout | jq -r '.data | .[].key')
+	local created_at=$(echo "$listout" | jq -r '.data | .[].created_at')
+ 	# TODO: More POSIX way to do this. Or just rewrite this shit in C. Fucking hell
+	local result=$(paste <(echo "$filename") <(echo "$created_at") --delimiters ' ')
+	echo "Files:
+$result"
+}
+
+filedelete() {
+	local file="$@"
+	local apiurl="$API_BASE/objects/$file"
+	local result=$(curl -s -X DELETE "$apiurl" -H "Authorization: $KEY" -H "User-Agent: $USERAGENT")
+	local success=$(echo $result | jq '.success')
+	if [[ "$success" == "true" ]]; then
+		local deleted_at=$(echo $result | jq -r '.data | .deleted_at')
+		echo "Done. $file deleted at $deleted_at"
+	else
+		# TODO: Give more detail here
+		echo "Deletion Failed."
+	fi
+}
+		
 # CLI #
 echoerr() {
     >&2 echo "$@"
@@ -1046,25 +1072,27 @@ is() {
 usage() {
     echoerr "usage: $0 [option...] [file...]"
     echoerr ""
-    echoerr " -h   --help            show this message"
-    echoerr " -v   --verbose         enable verbose logging"
-    echoerr "      --version         show version information"
-    echoerr "      --dry-run         do not actually upload"
-    echoerr " -u   --upload <file>   upload a file, repeatable"
-    echoerr " -l   --shorten <link>  shorten a link"
-    echoerr " -s   --screenshot      select and screenshot"
-    echoerr " -r   --record          record screen or stop recording"
+    echoerr " -h   --help               show this message"
+    echoerr " -v   --verbose            enable verbose logging"
+    echoerr "      --version            show version information"
+    echoerr "      --dry-run            do not actually upload"
+    echoerr " -u   --upload <file>      upload a file, repeatable"
+    echoerr " -l   --shorten <link>     shorten a link"
+    echoerr " -s   --screenshot         select and screenshot"
+    echoerr " -r   --record             record screen or stop recording"
     echoerr ""
-    echoerr "      --[no-]fullscreen enable [or disable] fullscreen screenshots, use with -s or -r"
-    echoerr " -c   --[no-]clipboard  copy [or not] output to clipboard"
-    echoerr "      --[no-]colors     enable [or disable] ascii coloring"
-    echoerr "      --[no-]cursor     enable [or disable] cursor in screenshots"
-    echoerr "      --[no-]notify     enable [or disable] notifications"
-    echoerr "      --key <key>       key to authorize with"
-    echoerr "      --record-framerate <framerate> set recording framerate"
-    echoerr "      --domain <domain> domain to use for resulting uploads"
-    echoerr "      --screenshots-dir <directory> permanently save screenshots, empty to disable, will be created if doesn't exist"
-    echoerr "      --associated-uploads Associate your uploads to your account in the database. "
+    echoerr "      --[no-]fullscreen    enable [or disable] fullscreen screenshots, use with -s or -r"
+    echoerr " -c   --[no-]clipboard     copy [or not] output to clipboard"
+    echoerr "      --[no-]colors        enable [or disable] ascii coloring"
+    echoerr "      --[no-]cursor        enable [or disable] cursor in screenshots"
+    echoerr "      --[no-]notify        enable [or disable] notifications"
+    echoerr "      --key <key>          key to authorize with"
+    echoerr "      --record-framerate   <framerate> set recording framerate"
+    echoerr "      --domain <domain>    domain to use for resulting uploads"
+    echoerr "      --screenshots-dir    <directory> permanently save screenshots, empty to disable, will be created if doesn't exist"
+    echoerr "      --associated-uploads Associate your uploads to your account in the database."
+    echoerr "      --list               List the files associated with your account."
+    echoerr "      --delete             Delete a file associated with your account."
     # echoerr "      --record-format   recorder format"
 }
 
@@ -1142,6 +1170,8 @@ while getopts_long :vhu:cfsrl: opt \
     screeenshots-dir 1 \
     record-format 1 \
     associated-uploads 0 \
+    list 0 \
+    delete 0 \
     "" "$@"
 do
     case "$opt" in
@@ -1166,6 +1196,8 @@ do
         no-cursor ) CURSOR=1 ;;
         r|record ) RECORD=1 ;;
         l|shorten ) SHORTEN="$OPTLARG" ;;
+	list ) FILELIST=1 ;;
+	d|delete ) FILEDELETE=1  ;;
         screenshots-dir ) SCREENSHOTS_DIR="$OPTLARG" ;;
         associated-uploads )  ASSOCIATED=1 ;;
         record-format ) fail "this option hasn't been implemented yet" ;;
@@ -1222,6 +1254,10 @@ elif [ "$RECORD" ]; then
     record
 elif [ "$SHORTEN" ]; then
     shorten $SHORTEN
+elif [ "$FILELIST" ]; then
+    filelist
+elif [ "$FILEDELETE" ]; then
+    filedelete "$*"
 elif [ "$#" -eq 0 ]; then
     if [ -t 0 ]; then
         echoerr "(type text. ^C to cancel, ^D twice to submit)"
