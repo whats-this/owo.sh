@@ -601,9 +601,9 @@ is_bsd() {
 
 _filesize() {
     if is_mac || is_bsd; then
-        stat -f '%z' $1
+        stat -f '%z' "$1"
     else
-        stat --printf '%s' $1
+        stat --printf '%s' "$1"
     fi
 }
 
@@ -759,7 +759,7 @@ upload() {
     }
     trap_add "_upload_cleanup $jsontemp" EXIT
 
-    for f in $@; do
+    for f in "$@"; do
         debug "f=$f"
         if [ "$f" = '-' ]; then # standard input
             debug "skipping $f because it's stdin pipe"
@@ -769,24 +769,24 @@ upload() {
             f='-'
         fi
 
-        if [ ! -f $f ]; then
+        if [ ! -f "$f" ]; then
             warn "skipping $f because it doesn't exist"
             continue
         fi
 
-        if [ $(_filesize $f) -lt 1 ]; then
+        if [ $(_filesize "$f") -lt 1 ]; then
             warn "skipping $f because it is empty"
             continue
         fi
 
         if command -v file > /dev/null; then
-            mime=$(file -b --mime-type --mime-encoding $f)
+            mime=$(file -b --mime-type --mime-encoding "$f")
         else
             mime="application/octet-stream"
-            warn "couldn't get mime for $f because file command doesn't exist, defaulting to application/octet-stream"
+            warn "couldn't get mime for \"$f\" because file command doesn't exist, defaulting to application/octet-stream"
         fi
 
-        debug "got $f with content-type of $mime"
+        debug "got \"$f\" with content-type of $mime"
         cmdline="$cmdline -F 'files[]=@$f;type=$mime'"
     done
 
