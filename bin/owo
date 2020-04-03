@@ -1,6 +1,6 @@
-#!/usr/bin/env bash
+#!/bin/sh
 # owo uploads files and shortens links
-# Copyright (C) 2018 OwO developers
+# Copyright (C) 2019 OwO <devs@whats-th.is>, Auri <me@aurieh.me>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -14,1258 +14,136 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-set -e
+set -eu
+POSIXLY_CORRECT=1
 
-# Globals #
-VERSION="v1.0.0"
-USERAGENT="WhatsThisClient (https://github.com/whats-this/owo.sh, $VERSION)"
-URL_REGEX='(https?|ftp|file)://[-A-Za-z0-9\+&@#/%?=~_|!:,.;]*[-A-Za-z0-9\+&@#/%=~_|]'
+VERSION="2.0.0"
+USERAGENT="WhatsThisClient (https://owo.codes/whats-this/owo.sh, $VERSION)"
 API_BASE="https://api.awau.moe"
 
-# CLI Variables #
-OWO_VERBOSE=$([ "$OWO_VERBOSE" ] && echo 1 || echo 0)
-VERBOSE=${OWO_VERBOSE:-0}
-COLORS=${OWO_COLORS:-1}
-NOTIFY=${OWO_NOTIFY:-0}
-COPY_CLIPBOARD=${OWO_COPY_CLIPBOARD:-0}
-SCREENSHOTS_DIR=${OWO_SCREENSHOTS_DIR:-}
-DOMAIN=${OWO_DOMAIN:-https://owo.whats-th.is/}
-FULLSCREEN_SCREENSHOT=${OWO_FULLSCREEN_SCREENSHOT:-0}
-CURSOR=${OWO_CURSOR:-1}
-KEY=${OWO_KEY:-}
-RECORD_FRAMERATE=${OWO_RECORD_FRAMERATE:-15}
-ASSOCIATED=${OWO_ASSOCIATED:-0}
-# Tasks #
-UPLOAD=( )
-SCREENSHOT=
-RECORD=
-SHORTEN=
-
-# realpath & readlink emulation #
-# Copyright (c) 2014 Michael Kropat
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
-realpath() {
-    canonicalize_path "$(resolve_symlinks "$1")"
-}
-
-resolve_symlinks() {
-    _resolve_symlinks "$1"
-}
-
-_resolve_symlinks() {
-    _assert_no_path_cycles "$@" || return
-
-    local dir_context path
-    path=$(readlink -- "$1")
-    if [ $? -eq 0 ]; then
-        dir_context=$(dirname -- "$1")
-        _resolve_symlinks "$(_prepend_dir_context_if_necessary "$dir_context" "$path")" "$@"
-    else
-        printf '%s\n' "$1"
-    fi
-}
-
-_prepend_dir_context_if_necessary() {
-    if [ "$1" = . ]; then
-        printf '%s\n' "$2"
-    else
-        _prepend_path_if_relative "$1" "$2"
-    fi
-}
-
-_prepend_path_if_relative() {
-    case "$2" in
-        /* ) printf '%s\n' "$2" ;;
-         * ) printf '%s\n' "$1/$2" ;;
-    esac
-}
-
-_assert_no_path_cycles() {
-    local target path
-
-    target=$1
-    shift
-
-    for path in "$@"; do
-        if [ "$path" = "$target" ]; then
-            return 1
-        fi
-    done
-}
-
-canonicalize_path() {
-    if [ -d "$1" ]; then
-        _canonicalize_dir_path "$1"
-    else
-        _canonicalize_file_path "$1"
-    fi
-}
-
-_canonicalize_dir_path() {
-    (cd "$1" 2>/dev/null && pwd -P)
-}
-
-_canonicalize_file_path() {
-    local dir file
-    dir=$(dirname -- "$1")
-    file=$(basename -- "$1")
-    (cd "$dir" 2>/dev/null && printf '%s/%s\n' "$(pwd -P)" "$file")
-}
-
-readlink() {
-    if _has_command readlink; then
-        _system_readlink "$@"
-    else
-        _emulated_readlink "$@"
-    fi
-}
-
-_has_command() {
-    hash -- "$1" 2>/dev/null
-}
-
-_system_readlink() {
-    command readlink "$@"
-}
-
-_emulated_readlink() {
-    if [ "$1" = -- ]; then
-        shift
-    fi
-
-    _gnu_stat_readlink "$@" || _bsd_stat_readlink "$@"
-}
-
-_gnu_stat_readlink() {
-    stat -c %n -- "$1" 2>/dev/null
-}
-
-_bsd_stat_readlink() {
-    stat -f %Y -- "$1" 2>/dev/null
-}
-
-# getopts #
-# Copyright 2005-2009 Stephane Chazelas <stephane_chazelas@yahoo.fr>
-#
-# Permission to use, copy, modify, distribute, and sell this software and
-# its documentation for any purpose is hereby granted without fee, provided
-# that the above copyright notice appear in all copies and that both that
-# copyright notice and this permission notice appear in supporting
-# documentation.  No representations are made about the suitability of this
-# software for any purpose.  It is provided "as is" without express or
-# implied warranty.
-getopts_long() {
-  [ -n "${ZSH_VERSION+z}" ] && emulate -L sh
-
-  unset OPTLERR OPTLARG || :
-
-  case "$OPTLIND" in
-    "" | 0 | *[!0-9]*)
-      # First time in the loop. Initialise the parameters.
-      OPTLIND=1
-      OPTLPENDING=
-      ;;
-  esac
-
-  if [ "$#" -lt 2 ]; then
-    printf >&2 'getopts_long: not enough arguments\n'
-    return 1
-  fi
-
-  # validate variable name. Need to fix locale for character ranges.
-  LC_ALL=C command eval '
-    case "$2" in
-      *[!a-zA-Z_0-9]*|""|[0-9]*)
-    printf >&2 "getopts_long: invalid variable name: \`%s'\''\n" "$2"
-    return 1
-    ;;
-    esac'
-
-  # validate short option specification
-  case "$1" in
-    ::*|*:::*|*-*)
-      printf >&2 "getopts_long: invalid option specification: \`%s'\n" "$1"
-      return 1
-      ;;
-  esac
-
-  # validate long option specifications
-
-  # POSIX shells only have $1, $2... as local variables, hence the
-  # extensive use of "set" in that function.
-
-  set 4 "$@"
-  while :; do
-    if
-      [ "$1" -gt "$#" ] || {
-    eval 'set -- "${'"$1"'}" "$@"'
-    [ -n "$1" ] || break
-    [ "$(($2 + 2))" -gt "$#" ]
-      }
-    then
-      printf >&2 "getopts_long: long option specifications must end in an empty argument\n"
-      return 1
-    fi
-    eval 'set -- "${'"$(($2 + 2))"'}" "$@"'
-    # $1 = type, $2 = name, $3 = $@
-    case "$2" in
-      *=*)
-    printf >&2 "getopts_long: invalid long option name: \`%s'\n" "$2"
-    return 1
-    ;;
-    esac
-    case "$1" in
-      0 | no_argument) ;;
-      1 | required_argument) ;;
-      2 | optional_argument) ;;
-      *)
-    printf >&2 "getopts_long: invalid long option type: \`%s'\n" "$1"
-    return 1
-    ;;
-    esac
-    eval "shift 3; set $(($3 + 2))"' "$@"'
-  done
-  shift
-
-  eval "shift; set $(($1 + $OPTLIND))"' "$@"'
-
-  # unless there are pending short options to be processed (in
-  # $OPTLPENDING), the current option is now in ${$1}
-
-  if [ -z "$OPTLPENDING" ]; then
-    [ "$1" -le "$#" ] || return 1
-    eval 'set -- "${'"$1"'}" "$@"'
-
-    case "$1" in
-      --)
-        OPTLIND=$(($OPTLIND + 1))
-    return 1
-    ;;
-      --*)
-        OPTLIND=$(($OPTLIND + 1))
-        ;;
-      -?*)
-        OPTLPENDING="${1#-}"
-    shift
-    ;;
-      *)
-        return 1
-    ;;
-    esac
-  fi
-
-  if [ -n "$OPTLPENDING" ]; then
-    # WA for zsh and bash 2.03 bugs:
-    OPTLARG=${OPTLPENDING%"${OPTLPENDING#?}"}
-    set -- "$OPTLARG" "$@"
-    OPTLPENDING="${OPTLPENDING#?}"
-    unset OPTLARG
-
-    # $1 = current option = ${$2+1}, $3 = $@
-
-    [ -n "$OPTLPENDING" ] ||
-      OPTLIND=$(($OPTLIND + 1))
-
-    case "$1" in
-      [-:])
-    OPTLERR="bad option: \`-$1'"
-    case "$3" in
-      :*)
-        eval "$4=:"
-        OPTLARG="$1"
-        ;;
-      *)
-        printf >&2 '%s\n' "$OPTLERR"
-        eval "$4='?'"
-        ;;
-    esac
-    ;;
-
-      *)
-    case "$3" in
-      *"$1"::*) # optional argument
-        eval "$4=\"\$1\""
-        if [ -n "$OPTLPENDING" ]; then
-          # take the argument from $OPTLPENDING if any
-          OPTLARG="$OPTLPENDING"
-          OPTLPENDING=
-          OPTLIND=$(($OPTLIND + 1))
-        fi
-        ;;
-
-      *"$1":*) # required argument
-        if [ -n "$OPTLPENDING" ]; then
-          # take the argument from $OPTLPENDING if any
-          OPTLARG="$OPTLPENDING"
-          eval "$4=\"\$1\""
-          OPTLPENDING=
-          OPTLIND=$(($OPTLIND + 1))
-        else
-          # take the argument from the next argument
-          if [ "$(($2 + 2))" -gt "$#" ]; then
-        OPTLERR="option \`-$1' requires an argument"
-        case "$3" in
-          :*)
-            eval "$4=:"
-            OPTLARG="$1"
-            ;;
-          *)
-            printf >&2 '%s\n' "$OPTLERR"
-            eval "$4='?'"
-            ;;
-        esac
-          else
-        OPTLIND=$(($OPTLIND + 1))
-        eval "OPTLARG=\"\${$(($2 + 2))}\""
-        eval "$4=\"\$1\""
-          fi
-        fi
-        ;;
-
-      *"$1"*) # no argument
-        eval "$4=\"\$1\""
-        ;;
-      *)
-        OPTLERR="bad option: \`-$1'"
-        case "$3" in
-          :*)
-        eval "$4=:"
-        OPTLARG="$1"
-        ;;
-          *)
-        printf >&2 '%s\n' "$OPTLERR"
-        eval "$4='?'"
-        ;;
-        esac
-        ;;
-    esac
-    ;;
-    esac
-  else # long option
-
-    # remove the leading "--"
-    OPTLPENDING="$1"
-    shift
-    set 6 "${OPTLPENDING#--}" "$@"
-    OPTLPENDING=
-
-    while
-      eval 'set -- "${'"$1"'}" "$@"'
-      [ -n "$1" ]
-    do
-      # $1 = option name = ${$2+1}, $3 => given option = ${$4+3}, $5 = $@
-
-      case "${3%%=*}" in
-    "$1")
-      OPTLPENDING=EXACT
-      break;;
-      esac
-
-      # try to see if the current option can be seen as an abbreviation.
-      case "$1" in
-    "${3%%=*}"*)
-      if [ -n "$OPTLPENDING" ]; then
-        [ "$OPTLPENDING" = AMBIGUOUS ] || eval '[ "${'"$(($OPTLPENDING + 1))"'}" = "$1" ]' ||
-          OPTLPENDING=AMBIGUOUS
-          # there was another different option matching the current
-          # option. The eval thing is in case one option is provided
-          # twice in the specifications which is OK as per the
-          # documentation above
-      else
-        OPTLPENDING="$2"
-      fi
-      ;;
-      esac
-      eval "shift 2; set $(($2 + 2)) "'"$@"'
-    done
-
-    case "$OPTLPENDING" in
-      AMBIGUOUS)
-    OPTLERR="option \`--${3%%=*}' is ambiguous"
-    case "$5" in
-      :*)
-        eval "$6=:"
-        OPTLARG="${3%%=*}"
-        ;;
-      *)
-        printf >&2 '%s\n' "$OPTLERR"
-        eval "$6='?'"
-        ;;
-    esac
-    OPTLPENDING=
-    return 0
-    ;;
-      EXACT)
-        eval 'set "${'"$(($2 + 2))"'}" "$@"'
-    ;;
-      "")
-    OPTLERR="bad option: \`--${3%%=*}'"
-    case "$5" in
-      :*)
-        eval "$6=:"
-        OPTLARG="${3%%=*}"
-        ;;
-      *)
-        printf >&2 '%s\n' "$OPTLERR"
-        eval "$6='?'"
-        ;;
-    esac
-    OPTLPENDING=
-    return 0
-    ;;
-      *)
-        # we've got an abbreviated long option.
-    shift
-        eval 'set "${'"$(($OPTLPENDING + 1))"'}" "${'"$OPTLPENDING"'}" "$@"'
-    ;;
-    esac
-
-    OPTLPENDING=
-
-    # $1 = option type, $2 = option name, $3 unused,
-    # $4 = given option = ${$5+4}, $6 = $@
-
-    case "$4" in
-      *=*)
-    case "$1" in
-      1 | required_argument | 2 | optional_argument)
-        eval "$7=\"\$2\""
-        OPTLARG="${4#*=}"
-        ;;
-      *)
-        OPTLERR="option \`--$2' doesn't allow an argument"
-        case "$6" in
-          :*)
-        eval "$7=:"
-        OPTLARG="$2"
-        ;;
-          *)
-        printf >&2 '%s\n' "$OPTLERR"
-        eval "$7='?'"
-        ;;
-        esac
-        ;;
-    esac
-    ;;
-
-      *)
-        case "$1" in
-      1 | required_argument)
-        if [ "$(($5 + 5))" -gt "$#" ]; then
-          OPTLERR="option \`--$2' requires an argument"
-          case "$6" in
-        :*)
-          eval "$7=:"
-          OPTLARG="$2"
-          ;;
-        *)
-          printf >&2 '%s\n' "$OPTLERR"
-          eval "$7='?'"
-          ;;
-          esac
-        else
-          OPTLIND=$(($OPTLIND + 1))
-          eval "OPTLARG=\"\${$(($5 + 5))}\""
-          eval "$7=\"\$2\""
-        fi
-        ;;
-      *)
-        # optional argument (but obviously not provided) or no
-        # argument
-        eval "$7=\"\$2\""
-        ;;
-    esac
-    ;;
-    esac
-  fi
-  return 0
-}
-
-# Traps #
-# https://stackoverflow.com/a/7287873
-# note: printf is used instead of echo to avoid backslash
-# appends a command to a trap
-#
-# - 1st arg:  code to add
-# - remaining args:  names of traps to modify
-#
-trap_add() {
-    trap_add_cmd=$1; shift || fail "${FUNCNAME} usage error"
-    for trap_add_name in "$@"; do
-        trap -- "$(
-            # helper fn to get existing trap command from output
-            # of trap -p
-            extract_trap_cmd() { printf '%s\n' "$3"; }
-            # print existing trap command with newline
-            eval "extract_trap_cmd $(trap -p "${trap_add_name}")"
-            # print the new trap command
-            printf '%s\n' "${trap_add_cmd}"
-        )" "${trap_add_name}" \
-            || fail "unable to add to trap ${trap_add_name}"
-    done
-}
-# set the trace attribute for the above function.  this is
-# required to modify DEBUG or RETURN traps because functions don't
-# inherit them unless the trace attribute is set
-declare -f -t trap_add
-
-# Compat shim #
-tempdir() {
-    ([ "$TMPDIR" ] && echo "$TMPDIR") || ([ "$TMP" ] && echo "$TMP") || ([ "$TEMP" ] && echo "$TEMP") || echo "/tmp"
-}
-TMPDIR="$(tempdir)"
-
-prefix() {
-    # TODO: this is fragile and not bullet-proof
-    # relying on $0 is bad and readlink may not be
-    # present on some systems
-    local dir="$(dirname $(realpath $0))"
-    if [ -d "$dir" ]; then
-        echo "$(dirname $dir)"
-    else
-        echo "$(dirname $(dirname $(realpath $(which $0))))"
-    fi
-}
-
-PREFIX="$(prefix)"
-
-runtimedir() {
-    if [ "$XDG_RUNTIME_DIR" ]; then
-        echo "$XDG_RUNTIME_DIR"
-    elif [ -d "/run" ]; then
-        echo "/run/user/$(id -u)"
-    else
-        echo "$TMPDIR"
-    fi
-}
-
-RUNTIMEDIR="$(runtimedir)"
-
-_release_file() {
-    [ -f "/etc/lsb-release" ] && echo "/etc/lsb-release" && return 0
-    [ -f "/etc/os-release" ] && echo "/etc/os-release" && return 0
-}
-
-_IS_MAC=
-is_mac() {
-    if [ -z "$_IS_MAC" ]; then
-        if uname | grep -q "Darwin"; then
-            _IS_MAC=0
-        else
-            _IS_MAC=1
-        fi
-    fi
-    return $_IS_MAC
-}
-
-_IS_CHROMEOS=
-is_chromeos() {
-    if [ -z "$_IS_CHROMEOS" ]; then
-        if cat "$(_release_file)" | grep -q -i chrome; then
-            _IS_CHROMEOS=0
-        else
-            _IS_CHROMEOS=1
-        fi
-    fi
-    return $_IS_CHROMEOS
-}
-
-_IS_BSD=
-is_bsd() {
-    if [ -z "$_IS_BSD" ]; then
-        if uname -s | grep -q -i "BSD"; then
-            _IS_BSD=0
-        else
-            _IS_BSD=1
-        fi
-    fi
-    return $_IS_BSD
-}
-
-_filesize() {
-    if is_mac || is_bsd; then
-        stat -f '%z' "$1"
-    else
-        stat --printf '%s' "$1"
-    fi
-}
-
-notify() {
-    local OPTLIND=1
-    while getopts_long :t:m:i:e:g: opt \
-        title 1 \
-        message 1 \
-        icon 1 \
-        expire-time 1 \
-        group 1 \
-        "" "$@"
-    do
-        case "$opt" in
-            t|title ) local TITLE="$OPTLARG" ;;
-            m|message ) local MESSAGE="$OPTLARG" ;;
-            i|icon ) local ICON="$OPTLARG" ;;
-            e|expire-time ) local EXPIRE_TIME="$OPTLARG" ;;
-            g|group ) local GROUP="$OPTLARG" ;;
-            : ) fail "bad options passed to notify" ;;
-        esac
-    done
-    unset opt OPTLARG
-    if is_mac; then
-        # TODO: fuck /usr/local/bin
-        local cmdline="/usr/local/bin/terminal-notifier"
-        if [ "$TITLE" ]; then
-            cmdline="$cmdline -title '$TITLE'"
-        fi
-        if [ "$MESSAGE" ]; then
-            cmdline="$cmdline -message '$MESSAGE'"
-        fi
-        if [ "$ICON" ]; then
-            cmdline="$cmdline -appIcon '$ICON'"
-        fi
-        if [ "$EXPIRE_TIME" ]; then
-            cmdline="$cmdline -timeout $EXPIRE_TIME"
-        fi
-        if [ "$GROUP" ]; then
-            cmdline="$cmdline -group '$GROUP'"
-        fi
-    else
-        local cmdline="notify-send"
-        if [ "$ICON" ]; then
-            cmdline="$cmdline --icon '$ICON'"
-        fi
-        if [ "$EXPIRE_TIME" ]; then
-            cmdline="$cmdline --expire-time $EXPIRE_TIME"
-        fi
-        if [ "$GROUP" ]; then
-            cmdline="$cmdline --category '$GROUP'"
-        fi
-        if [ "$TITLE" ]; then
-            cmdline="$cmdline '$TITLE'"
-        else
-            fail "notify: missing title/summary"
-        fi
-        if [ "$MESSAGE" ]; then
-            cmdline="$cmdline '$MESSAGE'"
-        fi
-    fi
-    debug "eval $cmdline"
-    eval $cmdline
-}
-
-owo_notify() {
-    if is "$NOTIFY"; then
-        notify -t 'owo.whats-th.is' -m "$1" -i "$PREFIX/share/icons/default/500x500/apps/owo.png" -e 10
-    fi
-}
-
-clipboard() {
-    debug "copy: $1"
-    if is_mac; then
-        echo "$1" | tr -d "\n\r" | pbcopy
-    elif is_chromeos; then
-        local content=$(echo $1 | base64)
-        echo -e "\x1b]52;c;$content\x07"
-        echo -e "\ePtmux;\e\e]52;c;$content\a\e\\"
-    else
-        echo "$1" | tr -d "\n\r" | xclip -i -sel c -f | xclip -i -sel p
-    fi
-}
-
-# API #
-prepare_domain() {
-    local newdomain="$1"
-    if ! [[ "$newdomain" =~ ^https://.* ]]; then
-        newdomain="https://$newdomain"
-    fi
-    if ! [[ "$newdomain" =~ .*/$ ]]; then
-        newdomain="$newdomain/"
-    fi
-    echo $newdomain
-}
-
-_JSON_ERROR_MSG="you need jq, python (2.6 and above) or ruby (v1.9.3 and above or below with json gem)"
-json_get_value() {
-    if command -v jq > /dev/null; then
-        # XXX: doesn't handle quotes in items
-        echo "$(echo $1 | jq --argjson k \"$2\" -r '.[$k]')"
-    elif command -v python > /dev/null; then
-        # XXX: doesn't handle uppercase chars (because of True -> true
-        # conversion)
-        echo "$(echo $1 | python -c 'from __future__ import print_function; import json, sys; k=sys.argv[1]; print(str(json.load(sys.stdin)[k]).lower())' $2)"
-    elif command -v ruby > /dev/null; then
-        echo "$(echo $1 | ruby -e 'require "json"; k=ARGV[0]; puts(JSON.load($stdin)[k])' $2)"
-    else
-        fail "$_JSON_ERROR_MSG"
-    fi
-}
-
-json_map_string_array() {
-    # XXX: doesn't handle spaces in items
-    if command -v jq > /dev/null; then
-        # TODO: figure out if this is OK
-        echo "$(echo $1 | jq --argjson k1 "\"$2\"" --argjson k2 \"$3\" -r '.[$k1] | map(.[$k2]) | join(" ")')"
-    elif command -v python > /dev/null; then
-        echo $(echo $1 | python -c 'from __future__ import print_function; import json, sys; k1=sys.argv[1]; k2=sys.argv[2]; print(" ".join(map(lambda o: o[k2], json.load(sys.stdin)[k1])))' "$2" "$3")
-    elif command -v ruby > /dev/null; then
-        echo $(echo $1 | ruby -e 'require "json"; k1=ARGV[0]; k2=ARGV[1]; puts(JSON.load($stdin)[k1].map { |o| o[k2] }.join(" "))' "$2" "$3")
-    else
-        fail "$_JSON_ERROR_MSG"
-    fi
-}
-
-parsefilesjson() {
-    links=( $(json_map_string_array "$(cat $@)" 'files' 'url') )
-}
-
-prepare_file_links() {
-    for link in $1; do
-        echo -n "$DOMAIN$link "
-    done
-}
-
-upload() {
-    # TODO: posix-compat and tempdir
-    local jsontemp=$(mktemp $TMPDIR/outXXXXXXX.json)
-    if [[ $ASSOCIATED = 1 ]]; then
-    	local apiurl="$API_BASE/upload/pomf/associated?key=$KEY"
-    else
-    	local apiurl="$API_BASE/upload/pomf?key=$KEY"
-    fi
-    local cmdline="curl -s -w '%{http_code}' -o >(cat >&3 > $jsontemp) -H 'User-Agent: $USERAGENT' '$apiurl'"
-    local mime
-    local rc
-
-    _upload_cleanup() {
-        debug "cleaning up after upload"
-        debug "rm -f $1"
-        rm -f $1
-    }
-    trap_add "_upload_cleanup $jsontemp" EXIT
-
-    for f in "$@"; do
-        debug "f=$f"
-        if [ "$f" = '-' ]; then # standard input
-            debug "skipping $f because it's stdin pipe"
-            cmdline="$cmdline -F 'files[]=@-;type=application/octet-stream'"
-            continue
-        elif [ "$f" = '\-' ]; then # escaped standard input
-            f='-'
-        fi
-
-        if [ ! -f "$f" ]; then
-            warn "skipping $f because it doesn't exist"
-            continue
-        fi
-
-        if [ $(_filesize "$f") -lt 1 ]; then
-            warn "skipping $f because it is empty"
-            continue
-        fi
-
-        if command -v file > /dev/null; then
-            mime=$(file -b --mime-type --mime-encoding "$f")
-        else
-            mime="application/octet-stream"
-            warn "couldn't get mime for \"$f\" because file command doesn't exist, defaulting to application/octet-stream"
-        fi
-
-        debug "got \"$f\" with content-type of $mime"
-        cmdline="$cmdline -F 'files[]=@$f;type=$mime'"
-    done
-
-    # TODO: less hacky solution
-    if [[ $cmdline != *"-F"* ]]; then
-        fail "no files to upload"
-    fi
-
-    debug "eval $cmdline"
-    exec 3>&1
-    local status="$(eval $cmdline)"
-    if (( 200 <= $status && $status <= 299 )); then
-        parsefilesjson $jsontemp
-        debug "parsefilesjson gave us: ${links[*]}"
-        local newlinks=( $(prepare_file_links $links) )
-        debug "prepared links: ${newlinks[*]}"
-        echo "${newlinks[@]}"
-        if is "$COPY_CLIPBOARD"; then
-            clipboard ${newlinks[0]}
-        fi
-    else
-        fail "upload failed because server returned status not in 2xx range with message: $(json_get_value "$(cat $jsontemp)" 'description')"
-    fi
-}
-
-saveable() {
-    [ "$SCREENSHOTS_DIR" ]
-}
-
-ensure_outfile() {
-    if saveable; then
-        debug "outfile is saveable"
-        if [ ! -d "$SCREENSHOTS_DIR" ]; then
-            debug "SCREENSHOTS_DIR doesn't exist, proceeding to create it"
-            mkdir -p $SCREENSHOTS_DIR
-        fi
-        # TODO: is this date supported on macOS?
-        echo "$SCREENSHOTS_DIR/$(date -u +"%Y-%m-%dT%H:%M:%SZ").$1"
-    else
-        debug "outfile is temporary"
-        mktemp "$TMPDIR/outXXXXXXX.$1"
-    fi
-}
-
-screenshot() {
-    local outfile="$(ensure_outfile png)"
-    owo_notify "Select an area to screenshot, ESC to cancel"
-
-    _screenshot_cleanup() {
-        debug "cleaning up after screenshot"
-        if ! saveable; then
-            debug "rm -f $1"
-            rm -f $1
-        fi
-    }
-    trap_add "_screenshot_cleanup $outfile" EXIT
-
-    if is_mac; then
-        if is "$FULLSCREEN_SCREENSHOT"; then
-            screencapture -o "$outfile"
-        else
-            screencapture -o -i "$outfile"
-        fi
-    elif command -v maim > /dev/null; then
-        local cmdline="maim --quiet"
-        if ! is "$FULLSCREEN_SCREENSHOT"; then
-            cmdline="$cmdline -s"
-        fi
-        if ! is "$CURSOR"; then
-            cmdline="$cmdline --hidecursor"
-        fi
-        cmdline="$cmdline $outfile"
-        eval $cmdline
-    else
-        fail "missing maim on linux, please install it using your package manager of choice"
-    fi
-
-    if saveable; then
-        owo_notify "Saved to $outfile"
-    fi
-    
-    local link
-    read -r -a link < <(upload $outfile)
-
-    owo_notify "Uploaded to ${link[*]}"
-
-    echo "${link[@]}"
-}
-
-record() {
-    if is_mac || is_chromeos; then
-        fail "gif recording is not supported on your platform"
-    fi
-
-    local ffmpeg_loglevel
-    case "$VERBOSE" in
-        0 ) ffmpeg_loglevel="warning" ;;
-        1 ) ffmpeg_loglevel="info" ;;
-        2 ) ffmpeg_loglevel="verbose" ;;
-        3 ) ffmpeg_loglevel="debug" ;;
-        * ) ffmpeg_loglevel="trace" ;;
-    esac
-
-    debug "ffmpeg_loglevel=$ffmpeg_loglevel"
-
-    if [[ -f $RUNTIMEDIR/oworec.pid ]]; then
-        local pid=$(cat $RUNTIMEDIR/oworec.pid)
-        if kill -0 $pid 2> /dev/null; then
-            debug "pid exists, stopping gif recorder"
-            kill -INT $(cat $RUNTIMEDIR/oworec.pid)
-            exit 0
-        else
-            rm -f $RUNTIMEDIR/oworec.pid
-        fi
-    fi
-
-    local tempavi=$(mktemp $TMPDIR/outXXXXXXXXXX.avi)
-    local temppalette
-    local tempframe
-    local outfile="$(ensure_outfile gif)"
-
-    _record_cleanup() {
-        debug "cleaning up after record"
-        debug "rm -f $RUNTIMEDIR/oworec.pid"
-        rm -f $RUNTIMEDIR/oworec.pid
-        debug "rm -f $1"
-        rm -f $1
-        if [ "$2" ]; then
-            debug "rm -f $2"
-            rm -f $2
-        fi
-        if [ "$3" ]; then
-            debug "rm -f $3*.png"
-            rm -f $3*.png
-        fi
-        if ! saveable; then
-            debug "rm -f $4"
-            rm -f $4
-        fi
-    }
-    _record_sigint() {
-        owo_notify "Stopping screen recorder..."
-        debug "stopping gif encoder"
-        kill -INT $(cat $RUNTIMEDIR/oworec.pid)
-    }
-    trap_add "_record_cleanup \"$tempavi\" \"$temppalette\" \"$tempframe\" \"$outfile\"" EXIT
-    trap_add _record_sigint SIGINT
-
-    touch $RUNTIMEDIR/oworec.pid
-
-    owo_notify "Select an area to begin recording, ESC to cancel selection"
-    debug "reading slop"
-    # dunno why this exits with 1
-    read -r X Y W H G ID < <(slop -f "%x %y %w %h %g %i" -q) || true
-    if [ -z "$X" ]; then
-        debug "cancelled"
-        exit 1
-    fi
-
-    if is "$CURSOR"; then
-        local drawmouse="1"
-    else
-        local drawmouse="0"
-    fi
-
-    debug "going to start recording"
-    owo_notify "Recording..."
-    ffmpeg -loglevel $ffmpeg_loglevel -y -f x11grab -show_region 1 -framerate $RECORD_FRAMERATE \
-        -draw_mouse "$drawmouse" \
-        -s "$W"x"$H" -i "$DISPLAY".0+"$X","$Y" -codec:v huffyuv   \
-        -vf crop="iw-mod(iw\\,2):ih-mod(ih\\,2)" "$tempavi" &
-
-    local pid="$!"
-    debug "pid=$!"
-    echo "$pid" > $RUNTIMEDIR/oworec.pid
-    wait "$pid" && local rc=$? || local rc=$?
-    if (( rc != 130 && rc != 255 )); then
-        fail "x11grab failed with $rc"
-    fi
-    debug "x11grab done with $rc, proceeding to encode"
-
-    if ! [ -s "$tempavi" ]; then
-        fail "x11grab produced empty file, maybe dropped frames?"
-    fi
-
-    # TODO: non-gif formats maybe
-    # TODO: should we enable gifski by default?
-    # its slower but higher quality
-    # if command -v gifski > /dev/null; then
-        # tempframe=$(mktemp /tmp/frameXXXXXXXXXX)
-        # ffmpeg -v warning -i $tempavi -r 15 -f image2 $tempframe%04d.png
-        # gifski --fps 15 --quiet -o $outfile $tempframe*.png
-    # else
-        temppalette=$(mktemp $TMPDIR/outXXXXXXXXXX.png)
-        ffmpeg -v $ffmpeg_loglevel -i "$tempavi" -vf "fps=$RECORD_FRAMERATE,palettegen=stats_mode=full" -y $temppalette
-        ffmpeg -v $ffmpeg_loglevel -i "$tempavi" -i "$temppalette" -lavfi "fps=$RECORD_FRAMERATE [x]; [x][1:v] paletteuse=dither=sierra2_4a" -y $outfile
-    # fi
-    if saveable; then
-        owo_notify "Saved to $outfile"
-    fi
-
-    local link
-    read -r -a link < <(upload $outfile)
-
-    owo_notify "Uploaded to ${link[*]}"
-
-    echo "${link[@]}"
-}
-
-shorten() {
-    if [[ $ASSOCIATED = "1" ]]; then
-    	local apiurl="$API_BASE/shorten/polr/associated?action=shorten"
-    else
-        local apiurl="$API_BASE/shorten/polr?action=shorten"
-    fi
-    local url="$@"
-    if [ "$url" = '-' ]; then
-        debug "input is stdin"
-        url=$(cat -)
-    fi
-    debug "url=$url"
-    if [[ "$url" =~ $URL_REGEX ]]; then
-        local result=$(curl -s -G "$apiurl" --data-urlencode "key=$KEY" --data-urlencode "url=$url" -H "User-Agent: $USERAGENT")
-        if grep -q "https://" <<< "${result}"; then
-            local code=$(echo "$result" | sed 's/.*oe\///')
-            echo $code
-            local result="$DOMAIN$code"
-            if is "$COPY_CLIPBOARD"; then
-                clipboard "$result"
-            fi
-            echo "$result"
-        else
-            fail "shortening failed: $result"
-        fi
-    else
-        fail "bad url"
-    fi
-}
-
-filelist() {
-	local page="$@"
-	local offset=$(( page * 100 ))
-	local apiurl="$API_BASE/objects?key=$KEY&limit=100&offset=$offset"
-	local listout=$(curl -s -G "$apiurl" -H "User-Agent: $USERAGENT")
-	local filename=$(echo $listout | jq -r '.data | .[].key')
-	local created_at=$(echo "$listout" | jq -r '.data | .[].created_at')
- 	# TODO: More POSIX way to do this. Or just rewrite this shit in C. Fucking hell
-	local result=$(paste <(echo "$filename") <(echo "$created_at") --delimiters ' ')
-	echo "Files:
-$result"
-}
-
-filedelete() {
-	local file="$@"
-	local apiurl="$API_BASE/objects/$file"
-	local result=$(curl -s -X DELETE "$apiurl" -H "Authorization: $KEY" -H "User-Agent: $USERAGENT")
-	local success=$(echo $result | jq '.success')
-	if [[ "$success" == "true" ]]; then
-		local deleted_at=$(echo $result | jq -r '.data | .deleted_at')
-		echo "Done. $file deleted at $deleted_at"
-	else
-	        local error=$(echo $result | jq -r '.description')
-		echo "Deletion Failed. Message recieved: $error"
-	fi
-}
-		
-# CLI #
-echoerr() {
+XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+# shellcheck disable=SC1090
+[ -f "$XDG_CONFIG_HOME/owo/oworc" ] && . "$XDG_CONFIG_HOME/owo/oworc"
+# shellcheck disable=SC1090
+[ -f "$HOME/.oworc" ] && . "$HOME/.oworc"
+
+# XXX VERBOSE="${OWO_VERBOSE:-}"
+KEY="${OWO_KEY:-}"
+ASSOCIATED="${OWO_ASSOCIATED:-}"
+DOMAIN="https://${OWO_DOMAIN:-owo.whats-th.is}"
+NO_BUFFER="${OWO_NO_BUFFER:-}"
+FILE_TYPE=""
+FILE_NAME=""
+
+errecho() {
     >&2 echo "$@"
 }
 
-is() {
-    if test -z "$1"; then
-        return 1
-    elif [ "$1" == 0 ]; then
-        return 1
-    elif [ "$1" == 0.0 ]; then
-        return 1
-    else
-        return 0
-    fi
-}
-
 usage() {
-    echoerr "usage: $0 [option...] [file...]"
-    echoerr ""
-    echoerr " -h   --help               show this message"
-    echoerr " -v   --verbose            enable verbose logging"
-    echoerr "      --version            show version information"
-    echoerr "      --dry-run            do not actually upload"
-    echoerr " -u   --upload <file>      upload a file, repeatable"
-    echoerr " -l   --shorten <link>     shorten a link"
-    echoerr " -s   --screenshot         select and screenshot"
-    echoerr " -r   --record             record screen or stop recording"
-    echoerr ""
-    echoerr "      --[no-]fullscreen    enable [or disable] fullscreen screenshots, use with -s or -r"
-    echoerr " -c   --[no-]clipboard     copy [or not] output to clipboard"
-    echoerr "      --[no-]colors        enable [or disable] ascii coloring"
-    echoerr "      --[no-]cursor        enable [or disable] cursor in screenshots"
-    echoerr "      --[no-]notify        enable [or disable] notifications"
-    echoerr "      --key <key>          key to authorize with"
-    echoerr "      --record-framerate   <framerate> set recording framerate"
-    echoerr "      --domain <domain>    domain to use for resulting uploads"
-    echoerr "      --screenshots-dir    <directory> permanently save screenshots, empty to disable, will be created if doesn't exist"
-    echoerr "      --associated-uploads Associate your uploads to your account in the database."
-    echoerr "      --list               List the files associated with your account."
-    echoerr "      --delete             Delete a file associated with your account."
-    # echoerr "      --record-format   recorder format"
+    errecho "usage: $0 [-hvb] [-t TYPE] [-n NAME] [-u FILE] [-l URL] [FILE...]"
+    errecho
+    errecho " -h        show this message and exit"
+    errecho " -v        show version information and exit"
+    errecho " -b        don't buffer stdin to disk, default type to 'application/octet-stream'"
+    errecho " -t <TYPE> override file TYPE"
+    errecho " -n <NAME> override file NAME"
+    errecho " -u <FILE> upload FILE"
+    errecho " -l <URL>  shorten URL"
+    errecho
+    errecho "For more information, check owo(1)"
 }
 
 version() {
-    echoerr "$(basename $0) $VERSION"
-    echoerr "Copyright (C) 2018 OwO developers"
-    echoerr "This is free software.  You may redistribute copies of it under the terms of"
-    echoerr "the GNU General Public License <https://www.gnu.org/licenses/gpl.html>."
-    echoerr "There is NO WARRANTY, to the extent permitted by law."
-}
-
-logfail() {
-    if is "$COLORS"; then
-        echoerr -e "\e[31mfail\e[39m: $@"
-    else
-        echoerr -e "fail: $@"
-    fi
+    errecho "$0 v$VERSION"
+    errecho "Copyright (C) 2019 OwO <devs@whats-th.is>"
+    errecho "This is free software.  You may redistribute copies of it under the terms of"
+    errecho "the GNU General Public License <https://www.gnu.org/licenses/gpl.html>."
+    errecho "There is NO WARRANTY, to the extent permitted by law."
 }
 
 fail() {
-    logfail "$@"
+    errecho "owo:" "$@"
     exit 1
 }
 
-warn() {
-    if is "$COLORS"; then
-        echoerr -e "\e[93mwarn\e[39m: $@"
+_file_mime() {
+    # While implementing this function, I thought I would have no issues with
+    # compatibility considering file(1) -biL is supported on:
+    # Linux (Ian Darwin's file on most systems)
+    # OpenBSD 6.4
+    # FreeBSD 4.2 (least recent)
+    # NetBSD 1.5 (least recent)
+    # but, guess what, Apple *had* to do something absolutely idiotic and pull
+    # in a strange version of file(1) which has -I as the --mime flag as opposed
+    # to -i (like on Every Other Platform). Moral of story: macOS and everyone
+    # who works on its userland should be reserved a special place in hell.
+    if uname | grep -qi "darwin"; then # macOS
+        file -bIL "$@"
     else
-        echoerr -e "warn: $@"
+        file -biL "$@"
     fi
 }
 
-debug() {
-    if [[ $VERBOSE -gt 0 ]] && is "$COLORS"; then
-        echoerr -e "\e[34mdebug\e[39m: $@"
-    elif [[ $VERBOSE -gt 0 ]]; then
-        echoerr -e "debug: $@"
-    fi
+_tempdir() {
+    set +u
+    { [ "$TMPDIR" ] && echo "$TMPDIR"; } || \
+    { [ "$TEMP" ] && TMPDIR="$TEMP" && echo "$TMPDIR"; } || \
+    { [ "$TMP" ] && TMPDIR="$TMPDIR" && echo "$TMPDIR"; } || \
+    { [ -d "/tmp" ] && TMPDIR="/tmp" && echo "$TMPDIR"; } || \
+    { [ -d "/var/tmp" ] && TMPDIR="/var/tmp" && echo "$TMPDIR"; } || \
+    { [ -d "/usr/tmp" ] && TMPDIR="/usr/tmp" && echo "$TMPDIR"; } || \
+    pwd
+    set -u
 }
 
-# Config #
-_CONFIG=${XDG_CONFIG_HOME:-$HOME/.config}/owo/owo.conf
-CONFIG=${OWO_CONFIG:-$_CONFIG}
-if [ -f $CONFIG ]; then
-    debug "found config at $CONFIG"
-    source $CONFIG
-else
-    debug "no configuration file found at $CONFIG"
-fi
+upload() {
+    [ "$ASSOCIATED" ] && assoc="/associated" || assoc=""
+    fp="$1"
+    n="${FILE_NAME:-$(basename "$fp")}"
+    if [ "$fp" = "-" ]; then
+        ct="${FILE_TYPE:-application/octet-stream}"
+        if ! [ "$NO_BUFFER" ]; then
+            fp="$(mktemp "$(_tempdir)/owoXXXX")"
+            ct="$(tee "$fp" | _file_mime -)"
+        fi
+    else
+        ct="$(_file_mime "$1")"
+    fi
 
-# Main #
-OPTLIND=1
-while getopts_long :vhu:cfsrl: opt \
-    verbose 0 \
-    version 0 \
-    dry-run 0 \
-    help 0 \
-    colors 0 \
-    no-colors 0 \
-    notify 0 \
-    no-notify 0 \
-    key 1 \
-    record-framerate 1 \
-    domain 1 \
-    upload 1 \
-    clipboard 0 \
-    no-clipboard 0 \
-    fullscreen 0 \
-    no-fullscreen 0 \
-    screenshot 0 \
-    cursor 0 \
-    no-cursor 0 \
-    record 0 \
-    shorten 1 \
-    screeenshots-dir 1 \
-    record-format 1 \
-    associated-uploads 0 \
-    list 0 \
-    delete 0 \
-    "" "$@"
-do
-    case "$opt" in
-        v|verbose ) VERBOSE=$((VERBOSE+1)) ;;
-        version ) version; exit 0 ;;
-        dry-run ) DRY_RUN=1 ;;
-        h|help ) usage; exit 0 ;;
-        colors ) COLORS=1 ;;
-        no-colors ) COLORS=0 ;;
-        notify ) NOTIFY=1 ;;
-        no-notify ) NOTIFY=0 ;;
-        key ) KEY="$OPTLARG" ;;
-        record-framerate ) RECORD_FRAMERATE="$OPTLARG" ;;
-        domain ) DOMAIN="$OPTLARG" ;;
-        u|upload ) UPLOAD+=("$OPTLARG") ;;
-        c|clipboard ) COPY_CLIPBOARD=1 ;;
-        no-clipboard ) COPY_CLIPBOARD=0 ;;
-        f|fullscreen ) FULLSCREEN_SCREENSHOT=1 ;;
-        no-fullscreen ) FULLSCREEN_SCREENSHOT=0 ;;
-        s|screenshot ) SCREENSHOT=1 ;;
-        cursor ) CURSOR=0 ;;
-        no-cursor ) CURSOR=1 ;;
-        r|record ) RECORD=1 ;;
-        l|shorten ) SHORTEN="$OPTLARG" ;;
-	list ) FILELIST=1 ;;
-	d|delete ) FILEDELETE=1  ;;
-        screenshots-dir ) SCREENSHOTS_DIR="$OPTLARG" ;;
-        associated-uploads )  ASSOCIATED=1 ;;
-        record-format ) fail "this option hasn't been implemented yet" ;;
-        : ) logfail "$OPTLERR"; usage; exit 1 ;;
+    curl \
+        -sSH "User-Agent: $USERAGENT" \
+        -H "Authorization: $KEY" \
+        -F "files[]=@$fp;type=$ct;filename=$n" \
+        -XPOST "$API_BASE/upload/simple$assoc" | \
+        awk -v "DOMAIN=$DOMAIN/" -F ',' '{ if ($2 == 200) { gsub("^", DOMAIN, $1); print $1; } else { print "owo: not OK status: " $2 | "1>&2 exec cat"; exit 1; } }'
+}
+
+shorten() {
+    [ "$ASSOCIATED" ] && assoc="/associated" || assoc=""
+    [ "$1" = "-" ] && read -r url || url="$1"
+    curl \
+        -ssH "User-Agent: $USERAGENT" \
+        -H "Authorization: $KEY" \
+        --data-urlencode "action=shorten" \
+        --data-urlencode "url=$url" \
+        --data-urlencode "resultUrl=https://$DOMAIN/" \
+        -G "$API_BASE/shorten/polr"
+}
+
+while getopts :hvbt:n:u:l: OPT; do
+    case "$OPT" in
+        h ) usage; exit 0 ;;
+        v ) version; exit 0 ;;
+        b ) NO_BUFFER=1 ;;
+        t ) FILE_TYPE="$OPTARG" ;;
+        n ) FILE_NAME="$OPTARG" ;;
+        u ) upload "$OPTARG" ;;
+        l ) shorten "$OPTARG" ;;
+        * ) fail "invalid option: -$OPTARG" ;;
     esac
 done
-shift "$(($OPTLIND - 1))"
 
-DOMAIN=$(prepare_domain "$DOMAIN")
-if ! [ -t 2 ]; then
-    # stdout not a tty, force disable colors
-    COLORS=0
-fi
+shift "$((OPTIND - 1))"
+[ "$@" ] && for f in "$@"; do upload "$f"; done
 
-debug "TMPDIR=$TMPDIR"
-debug "PREFIX=$PREFIX"
-debug "RUNTIMEDIR=$RUNTIMEDIR"
-debug "after getopts"
-debug "VERBOSE=$VERBOSE"
-debug "COLORS=$COLORS"
-debug "NOTIFY=$NOTIFY"
-debug "COPY_CLIPBOARD=$COPY_CLIPBOARD"
-debug "DOMAIN=$DOMAIN"
-debug "FULLSCREEN_SCREENSHOT=$FULLSCREEN_SCREENSHOT"
-debug "CURSOR=$CURSOR"
-debug "KEY=$KEY"
-debug "tasks:"
-debug "UPLOAD=$UPLOAD"
-debug "SCREENSHOT=$SCREENSHOT"
-debug "RECORD=$RECORD"
-debug "SHORTEN=$SHORTEN"
-
-# Sanity checks
-if [ -z "$KEY" ]; then
-    fail "no key specified, use OWO_KEY env var, KEY= in $CONFIG, -k or --key"
-fi
-
-if [ -z "$DOMAIN" ]; then
-    fail "no domain specified, use OWO_DOMAIN env var, DOMAIN= in $CONFIG or --domain"
-fi
-
-if [ "$DRY_RUN" ]; then
-    debug "DRY_RUN set"
-    exit 0
-fi
-
-debug "do the thing"
-# Do the thing
-if [ "$UPLOAD" ]; then
-    upload "$UPLOAD"
-elif [ "$SCREENSHOT" ]; then
-    screenshot
-elif [ "$RECORD" ]; then
-    record
-elif [ "$SHORTEN" ]; then
-    shorten $SHORTEN
-elif [ "$FILELIST" ]; then
-    filelist "$*"
-elif [ "$FILEDELETE" ]; then
-    filedelete "$*"
-elif [ "$#" -eq 0 ]; then
-    if [ -t 0 ]; then
-        echoerr "(type text. ^C to cancel, ^D twice to submit)"
-    fi
-    upload -
-else
-    upload "$*"
-fi
-
-# vim: tabstop=4:shiftwidth=4:softtabstop=4:expandtab
+# vim:shiftwidth=4:expandtab:filetype=sh

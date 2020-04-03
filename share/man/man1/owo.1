@@ -1,114 +1,114 @@
-.TH owo 1  "June 26, 2018" "version 1.0.0" "USER COMMANDS"
+.TH owo 1 "March 26, 2020" "version 2.0.0" "USER COMMANDS"
 .SH NAME
-owo \- make use of whats-th.is file upload and link shortening services
+owo \- make use of whats-th.is file upload and link shortening functionality
+
 .SH SYNOPSIS
 .B owo
-[option...] [file...]
-.SH DESCRIPTION
-.PP
-This little tool helps you upload files and shorten links via awau.moe.
+[\-hvb] [\-t TYPE] [\-n NAME] [\-u FILE] [\-l URL] [FILE...]
+.PP DESCRIPTION
+Upload FILE(s) or shorten URL via api.awau.moe.
+
 .SH OPTIONS
-.TP \fB\-h\fR, \fB\-\-help\fR
-display a short help text
 .TP
-\fB\-v\fR, \fB\-\-verbose\fR
-enable verbose logging
+\fB\-h\fP
+show a help message and exit
 .TP
-\fB\-\-version\fR
-show version information
+\fB\-v\fP
+show version information and exit
 .TP
-\fB\-\-dry\-run\fR
-do not actually upload
+\fB\-b\fP
+don't buffer standard input to disk, default type to 'application/octet\-stream'
 .TP
-\fB\-\-upload\fR file
-upload a file, repeatable
+\fB\-t\fP \fUTYPE\fP
+override file \fUTYPE\fP
+\fB\-n\fP \fUNAME\fP
+override file \fUNAME\fP
 .TP
-\fB\-\-shorten\fR link
-shorten a link
+\fB\-u\fP \fUFILE\fP
+upload \fUFILE\fP
 .TP
-\fB\-\-screenshot\fR
-select and screenshot
-.TP
-\fB\-\-record\fR
-record screen or stop recording
-.TP
-\fB\-\-[no\-]fullscreen\fR
-enable [or disable] fullscreen screenshots, use with \-s or \-r
-.TP
-\fB\-\-[no\-]clipboard\fR
-copy [or not] output to clipboard
-.TP
-\fB\-\-[no\-]colors\fR
-enable [or disable] ascii coloring
-.TP
-\fB\-\-[no\-]cursor\fR
-enable [or disable] cursor in screenshots
-.TP
-\fB\-\-[no\-]notify\fR
-enable [or disable] notifications
-.TP
-\fB\-\-key\fR key
-key to authorize with
-.TP
-\fB\-\-record\-framerate\fR framerate
-frame rate for screen recording
-.TP
-\fB\-\-domain\fR domain
-domain to use for resulting uploads
-.TP
-\fB\-\-screenshots\-dir\fR directory
-permanently save screenshots, empty to disable, will be created if it doesn't exist
+\fB\-l\fP  \fUURL\fP
+shorten \fUURL\fP
 
 .SH CONFIGURATION
 .PP
-.B
-owo
-can be configured using aforementioned options, the configuration file or the
-environment, in that order. The configuration file (which is a sourced shell
-script) is located at
-.I $XDG_CONFIG_HOME/owo/owo.conf
-or, if $XDG_CONFIG_HOME is not present, at
-.I $HOME/.config/owo/owo.conf
+.B owo
+can be configured using options, the environment, and the configuration files,
+in that order. The configuration file (which is sourced as part of the script,
+providing environment variables) may be located at
+.I ~/.oworc
+or
+.I $XDG_CONFIG_HOME/owo/oworc
+or, if
+.I XDG_CONFIG_HOME
+is not present, at
+.I ~/.config/owo/oworc\fP;
+An example configuration is provided as part of the distribution
+at
+.I share/owo/oworc
+at the installation
+.I PREFIX\fP,
+usually
+.I /usr/local\fP;
+It is recommended to follow the variable setting convention specified in the
+example configuration when writing your own. A list of environment variables for use in
+or outside the configuration file follows.
+
+.SH ENVIRONMENT
+.TP
+OWO_KEY=
+Your whats-th.is key.
+.TP
+OWO_ASSOCIATED=
+Whether to use associated. Set to any string to enable, leave unset or empty to disable
+.TP
+OWO_DOMAIN=owo.whats-th.is
+Domain to use when outputting results.
+.TP
+OWO_NO_BUFFER=
+Setting this variable to a non-empty value is equivalent to setting \-b;
+Set to any string to disable buffering, leave unset or empty to leave it enabled.
+
+.SH EXIT STATUS
+.B owo
+returns a zero exit status if it succeeds in performing all given tasks.
+Non-zero status is returned in case of failure.
 
 .SH EXAMPLES
 .TP
+.TP
 Upload file:
 .B owo
-\-u test.bin
-.PP
+\-u foo.bar
 .TP
 Shorten link:
 .B owo
-\-l 'https://duckduckgo.com'
+\-l 'https://example.org/'
 .TP
-Shuffle a list of domains and pass one to owo (assumes a list of domains in domains.txt, separated by newline):
-.B shuf
-\-n 1 < domains.txt |
-.B xargs
-\-I {}
+Take X screenshot via maim and upload it:
+.B maim
+\-s |
 .B owo
-\-\-domain {} --screenshot
+\-t image/png \-n _.png \-
 .TP
-The above is also achievable using the config file, as all it is is a sourced script:
-.B echo
-"DOMAIN=$(shuf \-n 1 /absolute/path/to/domains.txt | xargs)" >> domains.txt
-.TP
-If you have a special clipboard manager installed, you can script copying like so:
+Upload file and copy resulting URL to X clipboard:
 .B owo
-\-\-screenshot \-\-no\-clipboard |
-.B your-super-cool-clip
-\-
-.TP
-Toggle verbosity (it contains your key so be careful with the output!):
-.B owo
-\-v
-.PP
-.SH EXIT STATUS
-owo returns a zero exit status if it succeeds in all given tasks.
-Non zero is returned in case of failure, as script uses set -e.
+\-u foo.bar |
+.B xclip
+\-i \-selection clipboard
+
 .SH AUTHOR
-OwO developers (devs (at) whats-th.is)
+OwO <devs@whats-th.is>, Auri <me@aurieh.me>
+
+.SH REPORTING BUGS
+You may report any bugs you find to our issue tracker:
+<https://owo.codes/whats-this/owo.sh/issues>
+
+.SH COPYRIGHT
+Copyright (C) 2019 OwO <devs@whats-th.is>, Auri <me@aurieh.me>, licensed under
+GPLv3-only: GNU GPL version 3 only <https://gnu.org/licenses/gpl.html>. This is
+free software; you are free to change and redistribute it. There is NO WARRANTY,
+to the extent permitted by law.
+
 .SH SEE ALSO
-curl(1)
-maim(1)
-slop(1)
+curl(1), maim(1), xclip(1)

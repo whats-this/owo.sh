@@ -1,0 +1,31 @@
+= owo.sh
+
+A shell script for uploading to and shortening links via https://whats-th.is.
+The only dependencies are a POSIX-compliant userspace and
+link:https://curl.haxx.se/[curl].
+
+== Installation & initial set-up
+
+1. `git clone git+https://owo.codes/whats-this/owo.sh.git owo.sh && cd owo.sh`.
+2. `git checkout $REV` where `$REV` is a release. Latest (recommended!) is `v2.0.0`.
+3. `sudo make install`. If you do not wish to install to `/usr/local`, you may
+use `make install "PREFIX=$HOME/.local"`, though on most systems this will
+render the manual unusable unless you add `$HOME/.local/share/man` to your
+`MANPATH`.
+4. `cp $PREFIX/share/owo/oworc $HOME/.oworc` where `$PREFIX` is `/usr/local` or
+`$HOME/.local`, depending on the approach used in step 3.
+
+== Usage
+
+See `man -s1 owo` or `owo --help`.
+
+For examples how to integrate owo.sh with your system, refer to the `examples/`
+directory.
+
+== License
+
+The contents of this repository are licensed under the GPL version 3 (only).
+A copy of the GPL can be found in link:LICENSE[LICENSE] or
+link:https://www.gnu.org/licenses/gpl-3.0.en.html[on FSF's web page].
+
+Also see `owo --version`.
