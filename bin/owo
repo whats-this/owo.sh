@@ -126,7 +126,7 @@ shorten() {
         -H "Authorization: $KEY" \
         --data-urlencode "action=shorten" \
         --data-urlencode "url=$url" \
-        --data-urlencode "resultUrl=https://$DOMAIN/" \
+        --data-urlencode "resultUrl=$DOMAIN/" \
         -G "$API_BASE/shorten/polr"
 }
 
@@ -144,6 +144,6 @@ while getopts :hvbt:n:u:l: OPT; do
 done
 
 shift "$((OPTIND - 1))"
-[ "$@" ] && for f in "$@"; do upload "$f"; done
+[ "$@" ] && for f in "$@"; do upload "$f"; done || true
 
 # vim:shiftwidth=4:expandtab:filetype=sh
