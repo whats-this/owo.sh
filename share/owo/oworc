@@ -14,10 +14,10 @@ OWO_ASSOCIATED=
 
 # set to one of the CDN domains
 # see: https://whats-th.is/faq.html#how-to-access-files
-DOMAIN="owo.whats-th.is"
+OWO_DOMAIN="owo.whats-th.is"
 
 # set to prevent owo(1) from buffering standard input to a file on disk
 # see: mktemp(1)
-NO_BUFFER=
+OWO_NO_BUFFER=
 
 # vim: syntax=sh:softtabstop=4:tabstop=4:shiftwidth=4:expandtab
