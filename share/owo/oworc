@@ -14,6 +14,9 @@ OWO_ASSOCIATED=
 
 # set to one of the CDN domains
 # see: https://whats-th.is/faq.html#how-to-access-files
+# tip: you may set this to "$(shuf -n1 file)" where file is the path
+# to a file containing multiple domains seperated by newlines to choose
+# a random domain every time owo is run
 OWO_DOMAIN="owo.whats-th.is"
 
 # set to prevent owo(1) from buffering standard input to a file on disk

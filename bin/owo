@@ -30,7 +30,7 @@ XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 # XXX VERBOSE="${OWO_VERBOSE:-}"
 KEY="${OWO_KEY:-}"
 ASSOCIATED="${OWO_ASSOCIATED:-}"
-DOMAIN="https://${OWO_DOMAIN:-owo.whats-th.is}"
+DOMAIN="${OWO_DOMAIN:-owo.whats-th.is}"
 NO_BUFFER="${OWO_NO_BUFFER:-}"
 FILE_TYPE=""
 FILE_NAME=""
@@ -129,6 +129,12 @@ shorten() {
         --data-urlencode "resultUrl=$DOMAIN/" \
         -G "$API_BASE/shorten/polr"
 }
+
+case "$DOMAIN" in
+    *"://"*) ;;
+    *) DOMAIN="https://$DOMAIN" ;;
+esac
+
 
 while getopts :hvbt:n:u:l: OPT; do
     case "$OPT" in
